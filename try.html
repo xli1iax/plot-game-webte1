@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <title>Double Jump Fix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            /*overflow: hidden;*/
+            /*width: 100%;*/
+            /*max-width: 100%;!* Переконуємося, що ширина тіла 100% *!*/
+            /*height: 100%;*/
+        }
+        /*#puddle-small {*/
+        /*    position: absolute; !* Додаємо позиціонування *!*/
+        /*    top: calc(99vh - 250px); !* Розташування на підлозі *!*/
+        /*    left: 20%; !* Розташування ліворуч *!*/
+        /*    z-index: 3; !* Рівень вище за фон *!*/
+        /*    width: 300px; !* Ширина калюжі *!*/
+        /*    height: auto;*/
+        /*}*/
+        /*#puddle-big {*/
+        /*    position: absolute; !* Додаємо позиціонування *!*/
+        /*    top: calc(99vh - 210px); !* Розташування на підлозі *!*/
+        /*    left: 40%; !* Розташування ліворуч *!*/
+        /*    z-index: 3; !* Рівень вище за фон *!*/
+        /*    width: 300px; !* Ширина калюжі *!*/
+        /*    height: auto;*/
+        /*    animation: obstacleMove 2s infinite linear;*/
+        /*}*/
+
+        @keyframes obstacleMove {
+            0% {
+                left: 20%;
+            }
+            100% {
+                left: -10%;
+            }
+        }
+        #hero {
+            position: absolute;
+            left: 0;
+            top: calc(99vh - 400px); /* Початковий рівень підлоги */
+            width: 200px;
+            height: 300px;
+        }
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden; /* Це важливо для приховування фону */
+        }
+
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100vh;
+            overflow-x: hidden;
+            transform: translateX(0);
+        }
+
+        #background {
+            width: 200%; /* Ширина усього екрану */
+            height: 100vh; /* Висота усього екрану */
+            /*background-size: cover; !* Підлаштовує розмір фону *!*/
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Анімація для першого стрибка */
+        .jump {
+            animation: jump 5s linear;
+        }
+
+        @keyframes jump {
+            0% {
+                top: calc(99vh - 400px - 150px);
+            }
+            30% {
+                top: calc(99vh - 400px - 130px);
+            }
+            50% {
+                top: calc(99vh - 400px - 80px);
+            }
+            80% {
+                top: calc(99vh - 400px - 130px);
+            }
+            100% {
+                top: calc(99vh - 400px - 150px);
+            }
+        }
+
+        /* Анімація для другого стрибка */
+        .jump2D {
+            animation: jump2D 2s linear;
+        }
+
+        @keyframes jump2D {
+            0% {
+                top: calc(99vh - 400px - 150px);
+            }
+            30% {
+                top: calc(99vh - 400px - 200px);
+            }
+            50% {
+                top: calc(99vh - 400px - 150px);
+            }
+            80% {
+                top: calc(99vh - 400px - 130px);
+            }
+            100% {
+                top: calc(99vh - 400px - 150px);
+            }
+        }
+
+        .obstacle {
+            position: absolute;
+            bottom: 150px;
+            width: 150px;
+            height: auto;
+            z-index: 3;
+        }
+
+        .small-puddle {
+            background: url("plot/puddle_small.PNG") no-repeat center/contain;
+            /*width: 200px; !* Задаємо ширину для маленької калюжі *!*/
+            /*height: auto; !* Задаємо висоту для маленької калюжі *!*/
+        }
+
+        .big-puddle {
+            background: url("plot/pudlle_big.PNG") no-repeat center/contain;
+            /*width: 400px; !* Задаємо ширину для великої калюжі *!*/
+            /*height: auto; !* Задаємо висоту для великої калюжі *!*/
+        }
+        .health-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            border: 2px solid #000;
+            background-color: #fff;
+            z-index: 10;
+        }
+
+        .health {
+            height: 100%;
+            width: 100%;
+            background-color: green;
+            transition: width 0.3s ease; /* Анімація для зміни ширини */
+        }
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup.hidden {
+            display: none;
+        }
+
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="game">
+    <div class="background">
+        <img id="background" src="plot/task1.JPG" alt="nature">
+    </div>
+    <img src="plot/static.PNG" alt="hero" id="hero">
+
+    <div class="health-bar">
+        <div class="health"></div>
+    </div>
+    <div id="win-popup" class="popup hidden">
+        <div class="popup-content">
+            <h1>Congratulations!</h1>
+            <p>You've won the game!</p>
+            <button id="restart-button">Restart</button>
+        </div>
+    </div>
+
+
+
+</div>
+<script>
+    const hero = document.querySelector('#hero');
+    let leftPosition = 0;
+    const keys = {};
+    const background = document.getElementById('background');
+    let backgroundPosition = 0; // Поточна позиція фону в пікселях
+    let backgroundSpeed = 2; // Швидкість руху фону
+    let isMovingRight = false; // Перевірка чи рухається фон
+    let runAnimationInterval = null;
+    // Функція для стрибка героя
+    let isJumping = false; // Додаємо змінну для перевірки стрибка
+    let isStanding = true;
+    const runningImages = ["plot/run1.PNG", "plot/static.PNG", "plot/run2.PNG"];  // Зображення під час бігу
+    const jumpingImage = "plot/jump.PNG";
+    const standingImage = "plot/static.PNG";
+    let currentRunningImage = 0;
+
+
+
+
+    const obstacles = [];
+
+    // Масив статичних перешкод
+    const staticObstacles = [
+        { type: 'small-puddle', startX: 800, speed: 3 },
+        { type: 'big-puddle', startX: 1200, speed: 3 },
+        { type: 'small-puddle', startX: 1800, speed: 3 },
+        { type: 'big-puddle', startX: 2000, speed: 3 },
+        { type: 'big-puddle', startX: 2400, speed: 3 }
+    ];
+
+    // Функція для створення перешкод
+    const createStaticObstacles = () => {
+        staticObstacles.forEach(obstacleData => {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle', obstacleData.type);
+
+            if (obstacleData.type === 'small-puddle') {
+                obstacle.style.width = '200px';
+                obstacle.style.height = '100px';
+                obstacle.style.bottom = '75px'; // Розташування для малої калюжі
+            } else if (obstacleData.type === 'big-puddle') {
+                obstacle.style.width = '400px';
+                obstacle.style.height = '200px';
+                obstacle.style.bottom = '30px'; // Розташування для великої калюжі
+            }
+
+            obstacle.style.left = `${obstacleData.startX}px`;
+            obstacle.dataset.speed = obstacleData.speed;
+
+            document.querySelector('.game').appendChild(obstacle);
+            obstacles.push(obstacle);
+        });
+    };
+
+
+    // Викликаємо створення перешкод
+    createStaticObstacles();
+
+    // Функція для руху перешкод
+    const moveObstacles = () => {
+        obstacles.forEach(obstacle => {
+            const speed = parseFloat(obstacle.dataset.speed);
+            const currentX = parseFloat(obstacle.style.left);
+            obstacle.style.left = `${currentX - speed}px`;
+
+            // Якщо перешкода виходить за межі екрану, її можна видалити
+            if (currentX < -200) {
+                obstacle.remove();
+            }
+        });
+    };
+    // Функція для одинарного стрибка
+    const singleJump = () => {
+        if(!hero.classList.contains("jump")) {
+            hero.classList.add("jump");
+        }
+        isJumping = true
+        hero.src = jumpingImage;  // Змінюємо зображення на стрибкове
+        // Після завершення анімації стрибка
+        setTimeout(() => {
+            hero.classList.remove("jump");  // Видаляємо клас для першого стрибка
+            isJumping = false;  // Тепер герой приземлився
+
+            // Якщо герой не рухається, показуємо зображення стояння
+            if (!isMovingRight) {
+                hero.src = standingImage;
+            }
+
+        }, 800);  // Тривалість анімації стрибка
+    };
+
+    // Функція для подвійного стрибка
+    const doubleJump = () => {
+        if(!hero.classList.contains("jump2D")) {
+            hero.classList.add("jump2D");
+        }
+        isJumping = true
+        hero.src = jumpingImage;  // Змінюємо зображення на стрибкове
+        // Після завершення анімації стрибка
+        setTimeout(() => {
+            hero.classList.remove("jump2D");  // Видаляємо клас для першого стрибка
+            isJumping = false;  // Тепер герой приземлився
+
+            // Якщо герой не рухається, показуємо зображення стояння
+            if (!isMovingRight) {
+                hero.src = standingImage;
+            }
+
+        }, 1200);  // Тривалість анімації стрибка
+    };
+
+    const toggleRunningImage = () => {
+        if (isJumping || !isMovingRight) return;
+        currentRunningImage = (currentRunningImage + 1) % runningImages.length; // Перемикаємо між 0 і 1
+        hero.src = runningImages[currentRunningImage]; // Оновлюємо зображення героя
+    };
+
+    // Відслідковуємо натискання кнопок
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'z' && !isJumping && !keys['x']) {  // Якщо натиснуто Z для одинарного стрибка
+            singleJump()  // Викликаємо одинарний стрибок
+        } else if (event.key === 'x' && !isJumping && !keys['z']) {  // Якщо натиснуто X для подвійного стрибка
+            doubleJump()
+        } else if (event.key === 'ArrowRight') {
+            if (!keys[event.key]) {
+                keys[event.key] = true;
+                if (!isMovingRight) { // Починаємо рух вправо
+                    isMovingRight = true;
+                    moving = true; // Персонаж рухається, фон також повинен рухатись
+                    isStanding = false;
+                    if (!isJumping) {
+                        runAnimationInterval = setInterval(toggleRunningImage, 200); // Змінюємо зображення кожні 200 мс
+                    }
+                }
+            }
+        }
+        keys[event.key] = true;
+    });
+
+    // Відслідковуємо відпускання кнопок
+    document.addEventListener('keyup', (event) => {
+        if (event.key === 'ArrowRight') {
+
+            isMovingRight = false; // Зупиняємо рух вправо
+            clearInterval(runAnimationInterval); // Зупиняємо анімацію бігу
+            runAnimationInterval = null;
+            moving = false;
+            if (!isJumping) {
+                hero.src = standingImage; // Встановлюємо зображення стояння
+                isStanding = true;
+            }
+        }
+        if (event.key === 'z' && !keys['ArrowRight']) {  // Якщо натиснуто Z для одинарного стрибка
+            isJumping = false;
+            hero.src = standingImage;
+            // Викликаємо одинарний стрибок
+        } else if (event.key === 'x' && !keys['ArrowRight']) {  // Якщо натиснуто Z для одинарного стрибка
+            isJumping = false;
+            hero.src = standingImage;
+        }
+        delete keys[event.key];
+    });
+
+    let moving = false;
+    const moveBackground = () => {
+        if (moving) {
+            backgroundPosition -= backgroundSpeed;
+        }
+        background.style.transform = `translateX(${backgroundPosition}px)`;
+    };
+    let moveSpeed;
+    // Рух героя по екрану
+    const moveHero = () => {
+        moveSpeed = 5;
+        if (keys['ArrowRight']) {
+            if (hero.classList.contains('jump2D')) {
+                moveSpeed = 15
+            } else if (hero.classList.contains('jump')) {
+                moveSpeed = 10;
+            }
+            leftPosition += moveSpeed;
+            hero.style.left = `${leftPosition}px`;
+        }
+
+    };
+
+    // Основний цикл
+    setInterval(() => {
+        moveHero();
+        moveBackground();
+    }, 50);
+
+    const healthBar = document.querySelector('.health');  // Шкала здоров'я
+    let health = 100;  // Початковий рівень здоров'я
+    let collisionCount = 0;  // Лічильник зіткнень
+
+    // Функція для зменшення здоров'я
+    const reduceHealth = () => {
+        health -= 20;  // Зменшуємо здоров'я на 20
+        if (health < 0) health = 0;  // Перевіряємо, щоб здоров'я не було менше 0
+        healthBar.style.width = `${health}%`;  // Оновлюємо ширину шкали здоров'я
+    };
+
+    // Функція для перевірки, чи наступив герой на перешкоду
+    // Функція для перевірки, чи наступив герой на перешкоду
+    const checkCollision = () => {
+        const heroRect = hero.getBoundingClientRect(); // Отримуємо межі героя
+
+        obstacles.forEach(obstacle => {
+            const obstacleRect = obstacle.getBoundingClientRect(); // Отримуємо межі перешкоди
+
+            // Перевірка на перекриття
+            const isOverlapping = !(
+                heroRect.right < obstacleRect.left + 50 ||  // Герой ліворуч від перешкоди
+                heroRect.left > obstacleRect.right - 100 || // Герой праворуч від перешкоди
+                heroRect.bottom < obstacleRect.top +50 || // Герой вище перешкоди
+                heroRect.top > obstacleRect.bottom    // Герой нижче перешкоди
+            );
+
+            // Якщо перекриття є і колізія ще не була оброблена
+            if (isOverlapping && !obstacle.dataset.collided) {
+                collisionCount++;  // Збільшуємо лічильник зіткнень
+                reduceHealth();  // Зменшуємо здоров'я
+
+                // Якщо зіткнень 5, програш
+                if (collisionCount >= 5) {
+                    alert("Game Over! You've hit 5 obstacles.");
+                    location.reload(); // Перезапускаємо гру
+                }
+
+                // Позначаємо перешкоду як оброблену
+                obstacle.dataset.collided = true;
+            }
+        });
+    };
+
+    const showWinPopup = () => {
+        const popup = document.getElementById('win-popup');
+        popup.classList.remove('hidden'); // Показуємо попап
+    };
+
+    // Додаємо функцію для перезапуску гри
+    const restartGame = () => {
+        location.reload(); // Перезавантажуємо сторінку
+    };
+
+    // Обробляємо клік на кнопку перезапуску
+    document.getElementById('restart-button').addEventListener('click', restartGame);
+
+    const checkWinCondition = () => {
+        const heroLeftPosition = hero.getBoundingClientRect().left; // Поточна позиція правого краю героя
+        const screenWidth = window.innerWidth; // Ширина вікна браузера
+
+        // Якщо герой вийшов за межі екрана праворуч
+        if (heroLeftPosition > screenWidth) {
+            showWinPopup(); // Відображаємо спливаюче вікно
+        }
+    };
+    // Основний цикл гри
+    const gameLoop = () => {
+        moveObstacles();
+        checkWinCondition();
+        checkCollision();  // Перевіряємо колізії в кожному циклі
+        requestAnimationFrame(gameLoop);  // Оновлюємо гру
+    };
+
+    gameLoop();
+
+
+</script>
+
+</body>
+</html>
