@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+    <title>corridor</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .background {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            object-fit: contain;
+        }
+
+        #background {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 200vh;
+            transition: transform 0.3s ease;
+            transform-origin: center;
+        }
+        #hero {
+            position: absolute;
+            left: 42%;
+            bottom: -1%;
+            width: 8%;
+            height: 15%;
+            transition: left 0.2s linear, top 0.2s linear, transform 0.2s linear;
+        }
+
+        .tooltip {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .show-tooltip-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .show-tooltip-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup.hidden {
+            display: none;
+        }
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+        #score-counter{
+            position: fixed;
+            top: 10px;
+            width: 4%;
+            height: 4%;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+
+        #score-counter img {
+            width: 50px;
+            height: auto;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 125px;
+            height: auto;
+        }
+
+    </style>
+</head>
+<body>
+<div class="game">
+    <div class="background">
+        <img id="background" src="plot/corridor.JPG" alt="corridor">
+
+    </div>
+    <img id="hero" src="plot/hero-back.PNG" alt="hero">
+
+    <button class="show-tooltip-btn">Показати підказку</button>
+
+    <div class="tooltip" id="tooltip">
+        Це спливаюча підказка! Вона з'являється в лівому нижньому кутку.
+    </div>
+    <div id="win-popup" class="popup hidden">
+        <div class="popup-content">
+            <h1>Congratulations!</h1>
+            <p>You've won the game!</p>
+            <button id="restart-button">Restart</button>
+        </div>
+    </div>
+
+    <div id="score-counter"><img src="plot/crib.PNG" alt="crib"><span id="crib-counter">5</span></div>
+
+</div>
+
+<script>
+    const background = document.querySelector("#background");
+    const hero = document.querySelector('#hero');
+    const minX = window.innerWidth / 3;
+    const maxX = window.innerWidth - window.innerWidth/3 - window.innerWidth/6;
+    let lastTimestamp = 0;
+    let scaleFactor = 1;
+    const zoomSpeed = 0.00002;
+    const maxScale = 2;
+    let backgroundPosition = 0;
+    let backgroundPositionX = 0;
+    let isMobile = false;
+    const keys = {};
+
+
+    function moveHero() {
+        const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+
+        if (keys['ArrowLeft'] && currentLeft > window.innerWidth/3  ) {
+            hero.style.left = (currentLeft - 20) + 'px';
+        }
+        if (keys['ArrowRight'] && currentLeft < (window.innerWidth - window.innerWidth/3)) {
+            hero.style.left = (currentLeft + 20) + 'px';
+        }
+
+        requestAnimationFrame(moveHero);
+    }
+
+
+    document.addEventListener('keydown', (event) => {
+        keys[event.key] = true;
+    });
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    }) ;
+    navigator.permissions.query({ name: "gyroscope" }).then(function(permissionStatus) {
+        if (permissionStatus.state === 'granted') {
+            console.log("Доступ до гіроскопа надано.");
+        } else if (permissionStatus.state === 'denied') {
+            console.log("Доступ до гіроскопа відхилено.");
+        } else {
+            console.log("Доступ до гіроскопа очікується.");
+        }
+    });
+    if (window.matchMedia("(pointer: coarse)").matches) {
+        isMobile = true;
+
+        let sensor = new Gyroscope();
+        let x, z;
+        navigator.permissions.query({ name: 'gyroscope' }).then(function(permissionStatus) {
+            if (permissionStatus.state === 'granted') {
+                sensor.start();
+            } else {
+                console.log("Permission denied");
+            }
+        });
+        sensor.onreading = () => {
+            x = sensor.x * (90);
+            z = sensor.z * (-50);
+            if (screen.orientation.type === 'landscape-secondary') {
+                x *= -1;
+            }
+            const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+
+            const newLeft = currentLeft + x;
+
+            if (newLeft >= window.innerWidth/3 && newLeft <= window.innerWidth - window.innerWidth/3 - hero.offsetWidth) {
+                hero.style.left = newLeft + "px";
+            }
+
+        };
+        sensor.onerror = errorHandler;
+        function errorHandler(event) {
+            console.log(event.error.name, event.error.message);
+        }
+    } else {
+        moveHero();
+    }
+
+    const updateBackgroundTransform = () => {
+        background.style.transform = `translate(${backgroundPositionX}px, ${backgroundPosition}px) scale(${scaleFactor})`;
+        background.style.willChange = 'transform';
+    };
+
+    const animate = (timestamp) => {
+        const deltaTime = timestamp - lastTimestamp;
+        lastTimestamp = timestamp;
+
+            scaleFactor = Math.min(maxScale, scaleFactor + zoomSpeed * deltaTime);
+        backgroundPosition += 0.003 * deltaTime;
+
+        backgroundPositionX += 0.002 * deltaTime;
+
+
+        updateBackgroundTransform();
+
+        requestAnimationFrame(animate);
+    };
+    const obstacles = [];
+    const staticObstacles = [
+        { startY: 20, src: "plot/corridor-obstacle1.PNG",moveSpeed: 3 , zoomSpeed: 0.0002, moveDirection: "right", horizontalSpeed: 0.2 },
+        { startY: 0, src: "plot/corridor-obstacle2.PNG",moveSpeed: 2 , zoomSpeed: 0.0003, moveDirection: "left", horizontalSpeed: 0.4 },
+        { startY: 30, src: "plot/corridor-obstacle3.PNG",moveSpeed: 3 , zoomSpeed: 0.0001, moveDirection: "right", horizontalSpeed: 0.5 },
+        { startY: 300, src: "plot/corridor-obstacle4.PNG",moveSpeed: 4 , zoomSpeed: 0.0029, moveDirection: "left", horizontalSpeed:1 },
+        { startY: -10, src: "plot/corridor-obstacle5.PNG",moveSpeed: 1 , zoomSpeed: 0.00015, moveDirection: "right", horizontalSpeed: 2 }
+        // { startY: -10, src: "plot/corridor-obstacle-group1.PNG",moveSpeed: 1 , zoomSpeed: 0.00015, moveDirection: "right", horizontalSpeed: 0.00025 }
+    ];
+
+    const createStaticObstacles = () => {
+        staticObstacles.forEach(obstacleData => {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+
+            const randomStartX = Math.random() * (maxX - minX) + minX;
+
+            obstacle.style.width = '10%';
+            obstacle.style.height = '18%';
+
+            obstacle.style.left = `${randomStartX}px`;
+            obstacle.style.top = `${obstacleData.startY}px`;
+
+            obstacle.dataset.zoomSpeed = obstacleData.zoomSpeed;
+            obstacle.dataset.horizontalSpeed = obstacleData.horizontalSpeed;
+            obstacle.dataset.moveDirection = obstacleData.moveDirection;
+            obstacle.dataset.moveSpeed = obstacleData.moveSpeed;
+            obstacle.style.backgroundImage = `url("${obstacleData.src}")`;
+            obstacle.style.backgroundSize = 'contain';
+            obstacle.style.backgroundRepeat = 'no-repeat';
+            obstacle.style.backgroundPosition = 'center';
+
+            document.querySelector('.game').appendChild(obstacle);
+            obstacles.push(obstacle);
+        });
+    };
+
+    const moveObstacles = () => {
+        obstacles.forEach(obstacle => {
+            const speed = parseFloat(obstacle.dataset.moveSpeed) || 10;
+
+            // Рух вниз
+            const currentY = parseFloat(obstacle.style.top);
+            obstacle.style.top = `${currentY + speed}px`;
+
+            // Рух горизонтально
+            const currentX = parseFloat(obstacle.style.left);
+            const horizontalSpeed = parseFloat(obstacle.dataset.horizontalSpeed) || 0;
+            let moveDirection = obstacle.dataset.moveDirection;
+
+            let newX = currentX;
+
+            if (moveDirection === "right") {
+                newX += horizontalSpeed; // Рух праворуч
+                if (newX >= maxX) {
+                    // Досягнуто правої межі
+                    moveDirection = "left"; // Змінюємо напрямок
+                    newX = maxX; // Не виходимо за межу
+                }
+            } else if (moveDirection === "left") {
+                newX -= horizontalSpeed; // Рух ліворуч
+                if (newX <= minX) {
+                    // Досягнуто лівої межі
+                    moveDirection = "right"; // Змінюємо напрямок
+                    newX = minX; // Не виходимо за межу
+                }
+            }
+
+            obstacle.style.left = `${newX}px`;
+            obstacle.dataset.moveDirection = moveDirection;
+
+            // Масштабування (для ілюзії перспективи)
+            const currentScale = parseFloat(obstacle.dataset.scale || 1);
+            const zoomSpeed = parseFloat(obstacle.dataset.zoomSpeed) || 0;
+            const newScale = currentScale + zoomSpeed;
+            obstacle.style.transform = `scale(${newScale})`;
+            obstacle.dataset.scale = newScale;
+
+            // Видалення перешкоди, якщо вона виходить за межі екрана
+            if (currentY > window.innerHeight) {
+                obstacle.remove();
+                const index = obstacles.indexOf(obstacle);
+                if (index > -1) {
+                    obstacles.splice(index, 1);
+                }
+            }
+        });
+    };
+
+
+    createStaticObstacles();
+
+    const checkCollision = () => {
+        const heroRect = hero.getBoundingClientRect();
+
+        obstacles.forEach(obstacle => {
+            const obstacleRect = obstacle.getBoundingClientRect();
+
+            const isOverlapping = !(
+                heroRect.right < obstacleRect.left ||
+                heroRect.left > obstacleRect.right  ||
+                heroRect.bottom < obstacleRect.top ||
+                heroRect.top > obstacleRect.bottom
+            );
+            if (isOverlapping && !obstacle.dataset.collided) {
+                score--;
+                obstacle.dataset.collided = true;
+                updateScore();
+            }
+        });
+    };
+
+    let score = 5;
+
+    const updateScore = () => {
+        const scoreCounter = document.querySelector('#crib-counter');
+        scoreCounter.innerHTML= `${score}`;
+    };
+
+    const checkWinCondition = () => {
+        if (obstacles.length === 0) {
+            showWinPopup();
+        }
+    };
+    const showWinPopup = () => {
+        const popup = document.getElementById('win-popup');
+        popup.classList.remove('hidden');
+    };
+    const tooltip = document.getElementById('tooltip');
+    const showTooltipBtn = document.querySelector('.show-tooltip-btn');
+
+    showTooltipBtn.addEventListener('click', () => {
+        tooltip.style.display = 'block';
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 3000);
+    });
+
+    const gameLoop = () => {
+        moveObstacles();
+        checkCollision();
+        checkWinCondition();
+        requestAnimationFrame(gameLoop);
+        requestAnimationFrame(animate);
+    };
+
+    gameLoop();
+</script>
+</body>
+</html>

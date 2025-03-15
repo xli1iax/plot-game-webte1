@@ -1,0 +1,291 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+.game {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+.background {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    object-fit: contain;
+
+}
+
+#background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    transition: transform 0.3s ease;
+    transform-origin: center;
+
+}
+.lecture-tables {
+    z-index: 2;
+}
+#table1 {
+    position: absolute;
+    top: 67%;
+    left: -0.8%;
+    height: 33%;
+    width: 58%;
+    /*z-index: 3;*/
+}
+.seat {
+    z-index: 1;
+    position: absolute;
+}
+#seat-a-1 {
+    top: 59.2%;
+    left: -2.7%;
+    height: 18%;
+    width: 18%;
+}
+
+#seat-b-1 {
+    top: 59.6%;
+    left: 11%;
+    height: 18%;
+    width: 18%;
+}
+
+#seat-c-1 {
+    top: 59.8%;
+    left: 24.7%;
+    height: 18%;
+    width: 18%;
+}
+#seat-d-1 {
+    top: 60%;
+    left: 37.6%;
+    height: 18%;
+    width: 18%;
+}
+#table2 {
+    position: absolute;
+    top: 45%;
+    left: -0.8%;
+    height: 33.6%;
+    width: 62.3%
+}
+#seat-a-2 {
+    top: 39.5%;
+    left: -2.7%;
+    height: 18%;
+    width: 18%;
+}
+
+#seat-b-2 {
+    top: 40%;
+    left: 10.9%;
+    height: 18%;
+    width: 18%;
+}
+
+#seat-c-2 {
+    top: 40.5%;
+    left: 24.5%;
+    height: 18%;
+    width: 18%;
+}
+#seat-d-2 {
+    top: 40.8%;
+    left: 37.4%;
+    height: 18%;
+    width: 18%;
+}
+#table3 {
+    position: absolute;
+    top: 26.4%;
+    left: -0.8%;
+    height: 36%;
+    width: 65.9%
+}
+#seat-a-3 {
+    top: 22%;
+    left: -2.4%;
+    height: 18%;
+    width: 18%;
+}
+
+#seat-b-3 {
+    top: 22.3%;
+    left: 11.1%;
+    height: 18%;
+    width: 18%;
+}
+
+#seat-c-3 {
+    top: 22.3%;
+    left: 24.8%;
+    height: 18%;
+    width: 18%;
+}
+#seat-d-3 {
+    top: 22.5%;
+    left: 37.8%;
+    height: 18%;
+    width: 18%;
+}
+#seat-e-3 {
+    top: 22.7%;
+    left: 49.8%;
+    height: 18%;
+    width: 18%;
+}
+
+#table4 {
+    position: absolute;
+    top: 8.7%;
+    left: -0.8%;
+    height: 38%;
+    width: 69.1%
+}
+#seat-a-4 {
+    top: 6%;
+    left: -2.6%;
+    height: 18%;
+    width: 18%;
+}
+
+#seat-b-4 {
+    top: 6%;
+    left: 10.9%;
+    height: 18%;
+    width: 18%;
+}
+
+#seat-c-4 {
+    top: 6%;
+    left: 24.5%;
+    height: 18%;
+    width: 18%;
+}
+#seat-d-4 {
+    top: 6.1%;
+    left: 37.4%;
+    height: 18%;
+    width: 18%;
+}
+#seat-e-4 {
+    top: 6%;
+    left: 49.9%;
+    height: 18%;
+    width: 18%;
+}
+
+#hero {
+    position: absolute;
+    left: 42%;
+    bottom: -1%;
+    width: 8%;
+    height: 15%;
+    transition: left 0.2s linear, top 0.2s linear, transform 0.2s linear;
+}
+
+.tooltip {
+    position: fixed;
+
+    left: 20px;
+    bottom: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    display: none;
+    z-index: 1000;
+}
+
+.show-tooltip-btn, .show-task-tooltip-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 12px 20px; /* Збільшена зона натискання для кращого досвіду */
+    background: linear-gradient(145deg, #007bff, #0056b3); /* Градієнт для фону */
+    color: white;
+    font-size: 16px; /* Трохи більший шрифт */
+    font-weight: 600; /* Жирний шрифт для більшої виразності */
+    border: none;
+    border-radius: 10px; /* Кругліші кути для сучаснішого вигляду */
+    cursor: pointer;
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(0, 0, 0, 0.1); /* Легкий ефект тіні */
+    transition: all 0.3s ease; /* Плавний перехід для всіх змін */
+}
+
+/* Ефект при наведенні */
+.show-tooltip-btn:hover, .show-task-tooltip-btn:hover {
+    background: linear-gradient(145deg, #0056b3, #007bff); /* Зміна градієнту при наведенні */
+    transform: translateY(-4px); /* Легкий ефект підняття при наведенні */
+    box-shadow: 4px 8px 16px rgba(0, 0, 0, 0.15); /* Посилена тінь при наведенні */
+}
+
+/* Ефект при натисканні */
+.show-tooltip-btn:active, .show-task-tooltip-btn:active {
+    transform: translateY(2px); /* Зворотний ефект натискання */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Легка тінь при натисканні */
+}
+.show-task-tooltip-btn {
+    top: 2%;
+    left: 20%;
+    width: 15%;
+    height: 4.5%;
+}
+
+.show-tooltip-btn {
+    top: 2%;
+    left: 2%;
+    width: 15%;
+    height: 4.5%;
+}
+
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup.hidden {
+    display: none;
+}
+.popup-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.popup-content h1 {
+    margin: 0 0 10px;
+    font-size: 24px;
+}
+
+.popup-content button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.popup-content button:hover {
+    background-color: #45a049;
+}

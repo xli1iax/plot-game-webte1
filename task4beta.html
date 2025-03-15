@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+    <title>Walk-through turnstile</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .background {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            object-fit: contain;
+        }
+
+        #background {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            transition: transform 0.3s ease;
+            transform-origin: center;
+
+        }
+        #hero {
+            position: absolute;
+            left: 42%;
+            bottom: -50%;
+            width: 30%;
+            height: 100%;
+            transition: left 0.2s linear, top 0.2s linear, transform 0.2s linear;
+        }
+
+        .tooltip {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .show-tooltip-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .show-tooltip-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup.hidden {
+            display: none;
+        }
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="game">
+
+    <div class="background">
+        <img id="background" src="plot/turnstile.JPG" alt="turnstile">
+    </div>
+
+    <img id="hero" src="plot/isic-hand.PNG" alt="hand with ISIC">
+
+    <button class="show-tooltip-btn">Показати підказку</button>
+
+    <div class="tooltip" id="tooltip">
+        Це спливаюча підказка! Вона з'являється в лівому нижньому кутку.
+    </div>
+
+    <div id="win-popup" class="popup hidden">
+        <div class="popup-content">
+            <h1>Congratulations!</h1>
+            <p>You've won the game!</p>
+            <button id="restart-button">Restart</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const background = document.querySelector("#background");
+    const hero = document.querySelector('#hero');
+    const keys = {};
+
+
+    function moveHero() {
+        const currentTop = parseInt(window.getComputedStyle(hero).top, 10);
+        const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+
+        if (keys['ArrowUp'] &&currentTop > 0 ) {
+            hero.style.top = (currentTop - 25) + 'px';
+        }
+        if (keys['ArrowDown'] && currentTop < window.innerHeight){
+            hero.style.top = (currentTop + 25) + 'px'
+        }
+        if (keys['ArrowLeft'] && currentLeft > 0  ) {
+            hero.style.left = (currentLeft - 30) + 'px';
+        }
+        if (keys['ArrowRight'] && currentLeft < window.innerWidth) {
+            hero.style.left = (currentLeft + 30) + 'px';
+        }
+
+        requestAnimationFrame(moveHero);
+    }
+
+    document.addEventListener('keydown', (event) => {
+        keys[event.key] = true;
+    });
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    }) ;
+
+    navigator.permissions.query({ name: "gyroscope" }).then(function(permissionStatus) {
+        if (permissionStatus.state === 'granted') {
+            console.log("Доступ до гіроскопа надано.");
+        } else if (permissionStatus.state === 'denied') {
+            console.log("Доступ до гіроскопа відхилено.");
+        } else {
+            console.log("Доступ до гіроскопа очікується.");
+        }
+    });
+
+    if (window.matchMedia("(pointer: coarse)").matches) {
+
+        let sensor = new Gyroscope();
+        let x,y, z;
+
+        navigator.permissions.query({ name: 'gyroscope' }).then(function(permissionStatus) {
+            if (permissionStatus.state === 'granted') {
+                sensor.start();
+            } else {
+                console.log("Permission denied");
+            }
+        });
+
+        sensor.onreading = () => {
+            x = sensor.x * (90);
+            y = sensor.y * (60);
+            z = sensor.z * (-50);
+
+
+            if (screen.orientation.type === 'landscape-secondary') {
+                x *= -1;
+                y *= -1;
+            }
+            const currentTop = parseInt(window.getComputedStyle(hero).top, 10);
+            const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+
+            const newTop = currentTop - y;
+            const newLeft = currentLeft + x;
+
+
+            if (newTop <= window.innerHeight) {
+                hero.style.top = newTop + "px";
+            }
+
+            if (newLeft >= 0 && newLeft <= window.innerWidth) {
+                hero.style.left = newLeft + "px";
+            }
+        };
+
+        sensor.onerror = (event) => {
+            console.log(event.error.name, event.error.message);
+        };
+
+    }
+    else {
+        moveHero();
+    }
+
+
+    const checkWinCondition = () => {
+        const heroTopPosition = hero.getBoundingClientRect().top;
+        const heroLeftPosition = hero.getBoundingClientRect().left;
+        const heroRightPosition = hero.getBoundingClientRect().right;
+        const BackHeightCenter = background.getBoundingClientRect().height/4;
+        const BackWidthCenter = background.getBoundingClientRect().width/3;
+        if (heroTopPosition < BackHeightCenter && heroLeftPosition>BackWidthCenter  && heroRightPosition < 2*BackWidthCenter) {
+            showWinPopup();
+        }
+    };
+    const showWinPopup = () => {
+        const popup = document.getElementById('win-popup');
+        popup.classList.remove('hidden');
+    };
+
+    const tooltip = document.getElementById('tooltip');
+    const showTooltipBtn = document.querySelector('.show-tooltip-btn');
+
+    showTooltipBtn.addEventListener('click', () => {
+        tooltip.style.display = 'block';
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 3000);
+    });
+    const gameLoop = () => {
+        checkWinCondition();
+        requestAnimationFrame(gameLoop);
+    };
+
+    gameLoop();
+</script>
+</body>
+</html>

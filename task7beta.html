@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+    <title> test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .background {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            object-fit: contain;
+        }
+
+        #background {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 170vh;
+            transition: transform 0.3s ease;
+            transform-origin: center;
+        }
+        .tooltip {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .show-tooltip-btn, .show-task-tooltip-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 12px 20px; /* Збільшена зона натискання для кращого досвіду */
+            background: linear-gradient(145deg, #007bff, #0056b3); /* Градієнт для фону */
+            color: white;
+            font-size: 16px; /* Трохи більший шрифт */
+            font-weight: 600; /* Жирний шрифт для більшої виразності */
+            border: none;
+            border-radius: 10px; /* Кругліші кути для сучаснішого вигляду */
+            cursor: pointer;
+            box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(0, 0, 0, 0.1); /* Легкий ефект тіні */
+            transition: all 0.3s ease; /* Плавний перехід для всіх змін */
+        }
+
+        /* Ефект при наведенні */
+        .show-tooltip-btn:hover, .show-task-tooltip-btn:hover {
+            background: linear-gradient(145deg, #0056b3, #007bff); /* Зміна градієнту при наведенні */
+            transform: translateY(-4px); /* Легкий ефект підняття при наведенні */
+            box-shadow: 4px 8px 16px rgba(0, 0, 0, 0.15); /* Посилена тінь при наведенні */
+        }
+
+        /* Ефект при натисканні */
+        .show-tooltip-btn:active, .show-task-tooltip-btn:active {
+            transform: translateY(2px); /* Зворотний ефект натискання */
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Легка тінь при натисканні */
+        }
+        .show-task-tooltip-btn {
+            top: 2%;
+            left: 20%;
+            width: 15%;
+            height: 4.5%;
+        }
+
+        .show-tooltip-btn {
+            top: 2%;
+            left: 2%;
+            width: 15%;
+            height: 4.5%;
+        }
+
+        @media screen and (max-width: 1000px) {
+            .show-task-tooltip-btn,
+            .show-tooltip-btn {
+                font-size: 10px;
+                padding: 5px;
+                width: auto;
+                min-width: 80px;
+                min-height: 20px;
+            }
+        }
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup.hidden {
+            display: none;
+        }
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+
+
+
+        #popup-crib {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 80%;
+            overflow: auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 9;
+            /*display: flex;*/
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            box-sizing: border-box;
+        }
+        .crib-btn {
+
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10%;
+            height: 15%;
+            cursor: pointer; /* Робимо клікабельним */
+
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            text-decoration: none; /* Відключаємо підкреслення для посилання */
+            display: inline-block; /* Робимо елемент блочним */
+            z-index: 10; /* Переконатися, що кнопка на передньому плані */
+            color: #000; /* Колір тексту */
+        }
+
+        .crib-btn:hover {
+            transform: scale(1.05); /* Ефект збільшення */
+            background-color: #e0e0e0;
+        }
+        .crib {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 98.5%;
+            word-wrap: break-word;
+            font-size: 16px;
+        }
+
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Новий стиль для показу шпаргалок */
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+
+        .hidden {
+            display: none;
+        }
+        #tasks-container {
+            position: absolute;
+            top: 20%;
+            left: 17%;
+            /*transform: translate(-50%, -50%);*/
+            width: 65%;
+            height: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            /*gap: 10px;*/
+            /*background-color: rgba(255, 255, 255, 0.8);*/
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #task-display {
+            flex-grow: 1;
+            text-align: center;
+            max-width: 100%;
+        }
+
+        #task-display-img {
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: contain;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .arrow-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+
+        .arrow-btn:hover {
+            background-color: #45a049;
+        }
+.answer{
+    width: 25%;
+    height: 18%;
+}
+.selected {
+    box-shadow: 0 2px 5px #4CAF50;
+}
+
+        /* Стиль для міні аркуша */
+        .mini-sheet {
+            position: absolute;
+            bottom: 10px; /* Розміщуємо внизу вікна */
+            left: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8); /* напівпрозорий фон */
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-width: 25%;
+            max-height: 20%; /* обмеження висоти */
+            overflow-y: auto; /* Скролл в разі, якщо відповідей багато */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000; /* Над іншими елементами */
+        }
+
+        .mini-sheet h3 {
+            margin-top: 0;
+            font-size: 16px;
+        }
+
+        .answers-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .answer-item {
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .answer-item.selected {
+            background-color: #e0ffe0;
+        }
+
+    </style>
+</head>
+<body>
+<div class="game">
+    <div class="background">
+        <img id="background" src="plot/test-sheet.JPG" alt="sheet">
+
+    </div>
+<!--    <img id="hero" src="plot/hero-back.PNG" alt="hero">-->
+
+    <div class="tooltips">
+        <div>
+            <button class="show-tooltip-btn">Показати підказку</button>
+
+            <div class="tooltip" id="tooltip">
+                Це спливаюча підказка! Вона з'являється в лівому нижньому кутку.
+            </div>
+        </div>
+        <div>
+            <button class="show-task-tooltip-btn" id="show-task-tooltip-btn">Показати завдання</button>
+
+            <div class="tooltip" id="task-tooltip">
+                твоє місце вцлзщйцлвзщлйвзлй
+            </div>
+        </div>
+    </div>
+<!--    <a href="#" class="crib" id="show-crib">-->
+        <img class="crib-btn" id="show-crib" src="plot/crib.PNG" alt="crib">
+<!--    </a>-->
+
+    <div class="popup hidden crib" id="popup-crib">
+        Це спливаюча підказка! Вона з'являється в лівому нижньому кутку.
+    </div>
+    <div id="win-popup" class="popup hidden">
+        <div class="popup-content">
+            <h1>Congratulations!</h1>
+            <p>You've won the game!</p>
+            <button id="restart-button">Restart</button>
+        </div>
+    </div>
+    <div id="tasks-container">
+        <button id="prev-task" class="arrow-btn">&larr;</button>
+        <div id="task-display"> </div>
+
+        <button id="next-task" class="arrow-btn">&rarr;</button>
+    </div>
+
+
+    <!-- Міні аркуш -->
+    <div id="mini-sheet" class="mini-sheet">
+        <h3>Вибрані відповіді</h3>
+        <div id="answers-list" class="answers-list">
+            <!-- Тут будуть відображатися вибрані відповіді -->
+        </div>
+    </div>
+
+
+</div>
+<script>
+    // Масив для зберігання вже згенерованих чисел
+    let generatedNumbers = [];
+    let firstLoad = true;
+    if (!localStorage.getItem('correctAnswers') || firstLoad) {
+        localStorage.setItem('correctAnswers', JSON.stringify([])); // Встановити початкове значення як JSON-рядок
+    }
+    let userAnswers = [
+        {task_id: 0, srcAnswer: null},
+        {task_id: 1, srcAnswer: null},
+        {task_id: 2, srcAnswer: null},
+        {task_id: 3, srcAnswer: null}
+    ]; // Масив для збереження відповідей користувача
+
+    // Отримання масиву з localStorage
+    let correctAnswers = JSON.parse(localStorage.getItem('correctAnswers')) || [];
+    // Отримання значення
+    let score = parseInt(localStorage.getItem('score')) || 0;
+    // Встановленн
+const tasks = [
+    {task_id: 1, src:"plot/task-1.PNG"},
+    {task_id: 2, src:"plot/task-2.PNG"},
+    {task_id: 3, src:"plot/task-3.PNG"},
+    {task_id: 4, src:"plot/task-4.PNG"},
+    {task_id: 5, src:"plot/task-5.PNG"},
+    {task_id: 6, src:"plot/task-6.PNG"}
+]
+    const answers = [
+        { task_id: 1, src: "plot/task-1-a.PNG" },
+        { task_id: 1, src: "plot/task-1-b.PNG" },
+        { task_id: 1, src: "plot/task-1-c.PNG" },
+        { task_id: 2, src: "plot/task-2-a.PNG" },
+        { task_id: 3, src: "plot/task-3-a.PNG" },
+        { task_id: 4, src: "plot/task-4-a.PNG" },
+        { task_id: 5, src: "plot/task-5-a.PNG" },
+        { task_id: 6, src: "plot/task-6-a.PNG" }
+    ];
+    // Функція для генерації чотирьох унікальних випадкових чисел від 1 до 6
+    function generateUniqueRandomNumbers() {
+        // Якщо вже згенеровано 4 числа, виводимо повідомлення
+        if (generatedNumbers.length === 4) {
+            console.log("Усі 4 числа вже були згенеровані.");
+            return generatedNumbers;
+        }
+
+        // Генеруємо випадкові числа до тих пір, поки не отримаємо 4 унікальних числа
+        while (generatedNumbers.length < 4) {
+            let number = Math.floor(Math.random() * 6) + 1;
+
+            // Перевіряємо, чи число вже було згенероване
+            if (!generatedNumbers.includes(number)) {
+                generatedNumbers.push(number); // Додаємо число в масив
+            }
+        }
+
+        return generatedNumbers; // Повертаємо масив з чотирма унікальними числами
+    }
+    generateUniqueRandomNumbers();
+    // Приклад використання
+  // Виводить масив з чотирьох унікальних чисел від 1 до 6
+
+    function addCorrectAnswer(answer) {
+        correctAnswers.push(answer); // Додаємо відповідь до масиву
+        localStorage.setItem('correctAnswers', JSON.stringify(correctAnswers)); // Оновлюємо localStorage
+    }
+    function getCorrectAnswers() {
+        return JSON.parse(localStorage.getItem('correctAnswers')) || [];
+    }
+    const cribs = [
+        {question:"Z čoho sa skladá prechod v Petriho sieti?",
+            answer:"dfdh"},
+        {question:"Zadaj masku siete ak adresa počítača s najnižšou adresou v siete je 192.168.82.129 a adresa počítača s najvyššou adresou je 192.168.82.254",
+            answer:"/23"},
+        {question:"Čo vypíše tento kód?\n" +
+                "def f(s):\n" +
+                "  if len(s) == 1:\n" +
+                "    print(s)\n" +
+                "  else: \n" +
+                "    print(s[-1], end = ' ')\n" +
+                "    f(s[:-1])\n" +
+                "print(f[3,2,1,0,4,5])",
+            answer:"ja jebu?"},
+        {question:"Hádžeme naraz 2 kockami (červená a modrá). Budeme pozorovať nasledujúcu udalosť:\n" +
+                "na oboch kockách padne rovnaké číslo vypočítať pravdepodobnosť tejto udalosti?",
+            answer:"1000-7"},
+        {question:"aké formáty čísiel podporuje hardvérova nasobicka procesorov MSP430?",
+            answer:"bimbimXbambam"},
+        {question:"Koľko hráčov môže byť maximálne na ihrisku v zápase štvorhry?",
+            answer:"4"}
+    ]
+
+    function generateUniqueRandomCribs() {
+        let generatedNumbers = [];
+        while (generatedNumbers.length < score) {
+            let number = Math.floor(Math.random() * cribs.length); // Генерація випадкового індексу
+            if (!generatedNumbers.includes(number)) {
+                generatedNumbers.push(number); // Додаємо число, якщо воно унікальне
+            }
+        }
+        return generatedNumbers; // Повертаємо масив з унікальними індексами
+    }
+
+    // Функція для відображення вибраних шпаргалок у попапі
+    function showSelectedCribs() {
+        const popupCrib = document.getElementById("popup-crib");
+        const selectedIndices = generateUniqueRandomCribs();
+
+        // Очистити попап перед додаванням нових шпаргалок
+        popupCrib.innerHTML = "";
+
+        // Якщо немає вибраних шпаргалок, відобразити повідомлення
+        if (selectedIndices.length === 0) {
+            popupCrib.innerHTML = "<p>Немає доступних шпаргалок для показу.</p>";
+            return;
+        }
+
+        // Додавання вибраних шпаргалок до попапу
+        selectedIndices.forEach(index => {
+            const crib = cribs[index];
+            const cribElement = document.createElement("div");
+            cribElement.classList.add("crib");
+            cribElement.innerHTML = `
+            <p><strong>Question:</strong> ${crib.question}</p>
+            <p><strong>Answer:</strong> ${crib.answer}</p>
+        `;
+            popupCrib.appendChild(cribElement);
+        });
+
+
+    }
+    showSelectedCribs()
+
+
+    document.getElementById("show-crib").addEventListener("click", function(event) {
+        event.preventDefault();
+        const popupCrib = document.querySelector(".popup");
+
+        console.log("fdbdfg")
+        popupCrib.classList.toggle("hidden");
+        console.log("fdbdfg")
+    });
+    let keys = {}
+
+
+    let currentIndex = 0; // Індекс активного елемента
+    let answersAtTask = document.querySelectorAll('.answer'); // Отримуємо всі елементи з класом 'answer'
+
+
+    function moveHero() {
+
+        console.log("Answers at task:", answersAtTask); // Логування для перевірки
+
+        // Перевіряємо натискання клавіші вліво
+        if (keys['ArrowLeft']) {
+            if (currentIndex > 0) { // Переміщуємось вліво, якщо є елементи ліворуч
+                if (answersAtTask[currentIndex]) {
+                    answersAtTask[currentIndex].classList.remove('selected');
+                }
+                currentIndex--; // Зменшуємо індекс
+                if (answersAtTask[currentIndex]) {
+                    addCorrectAnswer(`${answersAtTask[currentIndex]}`);
+                    answersAtTask[currentIndex].classList.add('selected');
+                }
+            }
+        }
+
+        // Перевіряємо натискання клавіші вправо
+        if (keys['ArrowRight']) {
+            if (currentIndex <3) { // Переміщуємось вправо, якщо є елементи праворуч
+                if (answersAtTask[currentIndex]) {
+                    answersAtTask[currentIndex].classList.remove('selected');
+                }
+                currentIndex++; // Збільшуємо індекс
+                if (answersAtTask[currentIndex]) {
+                    addCorrectAnswer(`${answersAtTask[currentIndex]}`);
+                    answersAtTask[currentIndex].classList.add('selected');
+                }
+            }
+        }
+
+        // requestAnimationFrame(moveHero); // Продовжуємо анімацію
+    }
+
+    function displayTask(index) {
+        const taskDisplay = document.getElementById("task-display");
+
+        // Перевіряємо, чи є завдання і відповідь
+        if (generatedNumbers.length > 0) {
+            const taskIndex = generatedNumbers[index] - 1;
+            const task = tasks[generatedNumbers[index] - 1];
+
+            // Відображення завдання
+            if (task) {
+                let htmlContent = `
+                <img id="task-display-img" src="${task.src}" alt="Task ${task.task_id}">
+            `;
+
+                // Знайти всі відповіді для цього завдання
+                const taskAnswers = answers.filter(a => a.task_id === task.task_id);
+
+                // Якщо є відповіді, додаємо їх до htmlContent
+                if (taskAnswers.length > 0) {
+                    taskAnswers.forEach(answer => {
+                        htmlContent += `
+                        <img class="answer" src="${answer.src}" alt="Answer ${answer.task_id}">
+                    `;
+                    });
+                } else {
+                    htmlContent += "<p>Answer not available</p>";
+                }
+
+                // Встановлюємо HTML-контент в taskDisplay
+                taskDisplay.innerHTML = htmlContent;
+
+                // Отримуємо всі елементи з класом 'answer'
+                answersAtTask = document.querySelectorAll('.answer');
+
+                // Додаємо клас "selected" для збережених у localStorage
+                // highlightSavedAnswers();
+            } else {
+                taskDisplay.innerHTML = "<p>Task not available</p>";
+            }
+        }
+    }
+    // Функція для додавання вибраних відповідей на міні-аркуш
+    function updateMiniSheet() {
+        const answersList = document.getElementById('answers-list');
+        answersList.innerHTML = ''; // Очищаємо список перед оновленням
+
+        // Проходимо по всіх вибраних відповідях
+        userAnswers.forEach(answer => {
+            if (answer.srcAnswer) { // Перевіряємо, чи є відповідь
+                const answerItem = document.createElement('div');
+                answerItem.classList.add('answer-item');
+                answerItem.textContent = `Task ${answer.task_id + 1}: ${answer.srcAnswer}`;
+
+                // Додаємо клас 'selected', якщо відповідь вибрана
+                if (answer.srcAnswer) {
+                    answerItem.classList.add('selected');
+                }
+
+                // Додаємо елемент у список
+                answersList.appendChild(answerItem);
+            }
+        });
+    }
+
+    // Викликаємо функцію при виборі відповіді, щоб оновити міні-аркуш
+    // Функція для отримання лише букви відповіді (наприклад, "A", "B", "C", "D") з шляху
+    function getAnswerLetter(src) {
+        // Розбиваємо шлях за допомогою '-' та вибираємо останній елемент
+        const parts = src.split('-'); // Розбиваємо за знаком '-'
+        const answerLetter = parts[parts.length - 1].charAt(0); // Останній елемент (наприклад, 'c.PNG'), беремо перший символ (c)
+        return answerLetter.toUpperCase(); // Повертаємо велику букву (A, B, C, D)
+    }
+
+    // Функція для оновлення відповіді в userAnswers
+    function updateUserAnswer(taskId, answerSrc) {
+        const answerLetter = getAnswerLetter(answerSrc); // Отримуємо букву відповіді
+        if (answerLetter) {
+            const existingAnswer = userAnswers.find(answer => answer.task_id === taskId);
+            if (existingAnswer) {
+                existingAnswer.srcAnswer = answerLetter; // Оновлюємо відповідь, зберігаючи лише букву
+            } else {
+                userAnswers.push({ task_id: taskId, srcAnswer: answerLetter }); // Додаємо нову відповідь
+            }
+
+            // Оновлюємо міні-аркуш
+            updateMiniSheet();
+        }
+    }
+
+    // При виборі відповіді, викликаємо функцію handleSelectedAnswer
+    function handleSelectedAnswer(taskId, selectedElement) {
+        if (selectedElement.classList.contains('answer')) {
+            const answerSrc = selectedElement.getAttribute('src'); // Отримуємо шлях до відповіді
+            updateUserAnswer(taskId, answerSrc); // Оновлюємо відповідь з лише буквою
+            selectedElement.classList.add('selected');
+        }
+    }
+
+    // Викликаємо функцію при виборі відповіді, щоб оновити міні-аркуш
+    document.querySelectorAll('.answer').forEach(answerElement => {
+        answerElement.addEventListener('click', function() {
+            const taskId = generatedNumbers[currentTaskIndex];
+            handleSelectedAnswer(taskId, this);
+        });
+    });
+
+    // Ініціалізуємо міні-аркуш при завантаженні
+    updateMiniSheet();
+
+    // Функція для підсвічування збережених відповідей
+    function highlightSavedAnswers() {
+        // Отримуємо всі збережені варіанти відповіді з локального сховища
+        const savedAnswers = JSON.parse(localStorage.getItem('selectedAnswers')) || [];
+
+        // Якщо є збережені відповіді
+        if (savedAnswers.length > 0) {
+            // Отримуємо всі елементи з класом 'answer' (відповіді на сторінці)
+            const answersAtTask = document.querySelectorAll('.answer');
+
+            // Проходимо по всіх елементах і перевіряємо, чи є відповідність збереженому варіанту
+            answersAtTask.forEach(answer => {
+                const answerSrc = answer.getAttribute('src'); // Отримуємо src елемента на сторінці
+
+                // Якщо src елемента співпадає з одним з збережених варіантів, додаємо клас 'selected'
+                if (savedAnswers.includes(answerSrc)) {
+                    answer.classList.add('selected');
+                }
+            });
+        }
+    }
+
+    function addAnswer(taskId, answerSrc) {
+        // Перевіряємо, чи вже є відповідь для цього завдання
+        const existingAnswer = userAnswers.find(answer => answer.taskId === taskId);
+
+        if (existingAnswer) {
+            // Якщо відповідь для цього завдання вже є, оновлюємо її
+            existingAnswer.answerSrc = answerSrc;
+        } else {
+            // Якщо відповіді ще немає, додаємо нову
+            userAnswers.push({
+                taskId: taskId,
+                answerSrc: answerSrc
+            });
+        }
+
+        console.log(userAnswers); // Логуємо масив для перевірки
+    }
+
+    console.log(generatedNumbers);
+    let currentTaskIndex = 0
+    // Ініціалізуємо перше завдання
+    displayTask(currentTaskIndex);
+
+    // Додаємо обробники подій для стрілочок
+    // Функція для обробки вибору елемента
+
+
+    // function handleSelectedAnswer(taskId, selectedElement) {
+    //     // Перевірка, чи є selectedElement і чи має він клас 'answer'
+    //     if (selectedElement.classList.contains('answer')) {
+    //         const answerSrc = selectedElement.getAttribute('src'); // Отримуємо шлях до відповіді
+    //
+    //         // Оновлюємо масив userAnswers, зберігаючи відповідь для поточного taskId
+    //         updateUserAnswer(taskId, answerSrc);
+    //
+    //         // Додаємо клас selected для підсвічування вибраного варіанту
+    //         selectedElement.classList.add('selected');
+    //     } else {
+    //         console.log('Clicked element is not an answer or is undefined.');
+    //     }
+    // }
+
+    // function updateUserAnswer(taskId, answerSrc) {
+    //     // Шукаємо об'єкт з таким task_id у масиві userAnswers і оновлюємо srcAnswer
+    //     for (let i = 0; i < userAnswers.length; i++) {
+    //         if (userAnswers[i].task_id === taskId) {
+    //             userAnswers[i].srcAnswer = answerSrc;
+    //             console.log(`Answer for task ${taskId} has been updated to ${answerSrc}`);
+    //             break;
+    //         }
+    //     }
+    //     console.log(userAnswers)
+    // }
+
+
+
+    // Обробник для натискання на попереднє завдання
+    // Обробник для натискання на попереднє завдання
+    document.getElementById("prev-task").addEventListener("click", () => {
+
+        const selectedElement = document.querySelector('.answer.selected');
+        if (selectedElement) {
+            handleSelectedAnswer(currentTaskIndex, selectedElement); // Перевіряємо вибрану відповідь
+        }
+        if (currentTaskIndex > 0) {
+            currentTaskIndex--;
+            displayTask(currentTaskIndex); // Завантажуємо нове завдання
+        }
+
+        // Знайти вибрану відповідь на поточному завданні і передати її в handleSelectedAnswer
+
+    });
+
+    document.getElementById("prev-task").addEventListener("click", () => {
+        if (currentTaskIndex > 0) {
+            currentTaskIndex--;
+            displayTask(currentTaskIndex); // Завантажуємо нове завдання
+        }
+    });
+
+    // Обробник для натискання на наступне завдання
+    document.getElementById("next-task").addEventListener("click", () => {
+        const selectedElement = document.querySelector('.answer.selected');
+        if (selectedElement) {
+            handleSelectedAnswer(currentTaskIndex, selectedElement); // Перевіряємо вибрану відповідь
+        }
+        if (currentTaskIndex < generatedNumbers.length - 1) {
+            currentTaskIndex++;
+            displayTask(currentTaskIndex); // Завантажуємо нове завдання
+        }
+    });
+
+    // // При виборі відповіді
+    // document.querySelectorAll('.answer').forEach(answerElement => {
+    //     answerElement.addEventListener('click', function() {
+    //         const taskId = generatedNumbers[currentTaskIndex];
+    //         handleSelectedAnswer(taskId, this);
+    //     });
+    // });
+
+    document.addEventListener('keydown', (event) => {
+        keys[event.key] = true;
+        // moveHero();
+        if(event.key === 'ArrowRight') {
+            if (currentIndex <2) { // Переміщуємось вправо, якщо є елементи праворуч
+                if (answersAtTask[currentIndex]) {
+                    answersAtTask[currentIndex].classList.remove('selected');
+                }
+                currentIndex++; // Збільшуємо індекс
+                if (answersAtTask[currentIndex]) {
+                    answersAtTask[currentIndex].classList.add('selected');
+                }
+            }
+
+        }
+
+        if (event.key ==='ArrowLeft') {
+            if (currentIndex > 0) { // Переміщуємось вліво, якщо є елементи ліворуч
+                if (answersAtTask[currentIndex]) {
+                    answersAtTask[currentIndex].classList.remove('selected');
+                }
+                currentIndex--; // Зменшуємо індекс
+                if (answersAtTask[currentIndex]) {
+
+                    answersAtTask[currentIndex].classList.add('selected');
+                }
+            }
+        }
+
+    });
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    }) ;
+
+    const tooltip = document.getElementById('show-task-tooltip-btn');
+
+    tooltip.addEventListener('click', () => {
+        window.isEnded = true
+    });
+</script>
+</body>
+</html>

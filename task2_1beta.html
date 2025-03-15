@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+    <title>autobus</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .background {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+        #seat {
+            width: 8%;
+            height: auto;
+            position: absolute;
+            z-index:1;
+            top: 43%;
+            left: 85%;
+        }
+
+        #hero {
+            position: absolute;
+            left: 20%;
+            top: 43%;
+            width: 6%;
+            z-index: 2;
+            height: auto;
+            transition: left 0.2s linear, top 0.2s linear, transform 0.2s linear;
+
+        }
+
+        .tooltip {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .show-tooltip-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .show-tooltip-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup.hidden {
+            display: none;
+        }
+
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 125px;
+            height: auto;
+        }
+
+        .health-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            border: 2px solid #000;
+            background-color: #fff;
+            z-index: 10;
+        }
+        .health {
+            height: 100%;
+            width: 100%;
+            background-color: green;
+            transition: width 0.3s ease;
+        }
+
+    </style>
+</head>
+<body>
+<div class="game">
+    <div class="background">
+        <img id="background" src="plot/autobus.PNG" alt="autobus">
+        <img id="seat" src="plot/seat.PNG" alt="seat">
+    </div>
+
+    <img id="hero" src="plot/hero-top.PNG" alt="hero">
+
+    <button class="show-tooltip-btn">Показати підказку</button>
+
+    <div class="tooltip" id="tooltip">
+        Це спливаюча підказка! Вона з'являється в лівому нижньому кутку.
+    </div>
+    <div id="win-popup" class="popup hidden">
+        <div class="popup-content">
+            <h1>Congratulations!</h1>
+            <p>You've won the game!</p>
+            <button id="restart-button">Restart</button>
+        </div>
+    </div>
+    <div class="health-bar">
+        <div class="health"></div>
+    </div>
+    <div id="loose-popup" class="popup hidden">
+        <div class="popup-content">
+            <h1>Congratulations!</h1>
+            <p>You've lose the game!</p>
+        </div>
+    </div>
+</div>
+<script>
+    const hero = document.querySelector('#hero');
+    const keys = {};
+
+    let heroWidth = hero.offsetWidth;
+    let screenWidth = window.innerWidth;
+    let heroHeight = hero.offsetHeight;
+    let screenHeight = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+        screenWidth = window.innerWidth;
+        screenHeight = window.innerHeight;
+    });
+
+    document.addEventListener('keydown', (event) => {
+        keys[event.key] = true;
+    });
+
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    });
+    let isGameActive = true;
+    function moveHero() {
+        if (!isGameActive) return;
+        const currentTop = parseInt(window.getComputedStyle(hero).top, 10);
+        const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+
+        if (keys['ArrowUp'] && currentTop >screenHeight/10 ) {
+            hero.style.top = (currentTop - 1) + 'px';
+        }
+        if (keys['ArrowDown'] && currentTop + heroHeight < -screenHeight/3.5 + screenHeight) {
+            hero.style.top = (currentTop + 1) + 'px';
+        }
+        if (keys['ArrowLeft'] && currentLeft > screenWidth/10) {
+            hero.style.left = (currentLeft - 1) + 'px';
+        }
+        if (keys['ArrowRight'] && currentLeft + heroWidth < screenWidth - screenWidth/12) {
+            hero.style.left = (currentLeft + 1) + 'px';
+        }
+
+        requestAnimationFrame(moveHero);
+    }
+
+    moveHero();
+
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    }) ;
+    const obstacles = [];
+    const staticObstacles = [
+        { startX: '26%', startY: '26%', speed: 3, src: "plot/obstacle-person-1.PNG"},
+        { startX: '54%', startY: '27%', speed: 3, src: "plot/obstacle-person-2.PNG" },
+        { startX: '32%', startY: '28%', speed: 3, src: "plot/obstacle-person-3.PNG" },
+        { startX: '32%', startY: '63%', speed: 3, src: "plot/obstacle-person-4.PNG" },
+        { startX: '60%', startY: '63%', speed: 3, src: "plot/obstacle-person-5.PNG" },
+
+        { startX: '85%', startY: '32%', speed: 3, src: "plot/obstacle-person-7.PNG" },
+        { startX: '85%', startY: '19%', speed: 3, src: "plot/obstacle-person-3.PNG" },
+        { startX: '78%', startY: '31%', speed: 3, src: "plot/obstacle-person-5.PNG" },
+        { startX: '78%', startY: '19%', speed: 3, src: "plot/obstacle-person-3.PNG" },
+        { startX: '71%', startY: '31%', speed: 3, src: "plot/obstacle-person-2.PNG" },
+        { startX: '71%', startY: '19%', speed: 3, src: "plot/obstacle-person-7.PNG" },
+
+        { startX: '78%', startY: '31%', speed: 3, src: "plot/obstacle-person-6.PNG" },
+        { startX: '78%', startY: '19%', speed: 3, src: "plot/obstacle-person-4.PNG" },
+        { startX: '78%', startY: '58%', speed: 3, src: "plot/obstacle-person-5.PNG" },
+        { startX: '78%', startY: '71%', speed: 3, src: "plot/obstacle-person-2.PNG" },
+        { startX: '85%', startY: '58%', speed: 3, src: "plot/obstacle-person-6.PNG" },
+        { startX: '85%', startY: '71%', speed: 3, src: "plot/obstacle-person-1.PNG" },
+
+        { startX: '26%', startY: '63%', speed: 3, src: "plot/obstacle-person-6.PNG" },
+        { startX: '65.5%', startY: '63%', speed: 3, src: "plot/obstacle-person-7.PNG" },
+        { startX: '48.5%', startY: '26%', speed: 3, src: "plot/obstacle-person-1.PNG" },
+        { startX: '71%', startY: '73%', speed: 3, src: "plot/obstacle-person-2.PNG" },
+        { startX: '71%', startY: '63%', speed: 3, src: "plot/obstacle-person-3.PNG" }
+    ];
+    const createStaticObstacles = () => {
+        staticObstacles.forEach(obstacleData => {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+
+                obstacle.style.width = '6%';
+                obstacle.style.height = '10%';
+
+            obstacle.style.left = obstacleData.startX;
+            obstacle.style.top = obstacleData.startY;
+            obstacle.dataset.speed = obstacleData.speed;
+            obstacle.style.backgroundImage = `url("${obstacleData.src}")`;
+            obstacle.style.backgroundSize = 'contain';
+            obstacle.style.backgroundRepeat = 'no-repeat';
+            obstacle.style.backgroundPosition = 'center';
+            document.querySelector('.game').appendChild(obstacle);
+            obstacles.push(obstacle);
+        });
+    };
+
+    createStaticObstacles();
+
+    const checkWinCollision = () => {
+        const heroRect = hero.getBoundingClientRect();
+        const seat = document.querySelector('#seat');
+        const seatRect = seat.getBoundingClientRect();
+        console.log('Hero:', heroRect);
+        console.log('Seat:', seatRect);
+        if (heroRect.right > seatRect.left + seatRect.width/2 &&
+            heroRect.left < seatRect.right &&
+            heroRect.bottom > seatRect.top &&
+            heroRect.top < seatRect.bottom ) {
+            isGameActive = false;
+            console.log('Hero:', heroRect);
+            console.log('Seat:', seatRect);
+            showWinPopup();
+        }
+    }
+
+    let collisionCount = 0;
+    const checkCollision = () => {
+        const heroRect = hero.getBoundingClientRect();
+
+        obstacles.forEach(obstacle => {
+            const obstacleRect = obstacle.getBoundingClientRect();
+
+            const isOverlapping = !(
+                heroRect.right < obstacleRect.left ||
+                heroRect.left > obstacleRect.right  ||
+                heroRect.bottom < obstacleRect.top ||
+                heroRect.top > obstacleRect.bottom
+            );
+            if (isOverlapping && !obstacle.dataset.collided) {
+                collisionCount++;
+                reduceHealth();
+                if (collisionCount >= 5) {
+                    alert("Game Over! You've hit 5 obstacles.");
+                    reduceHealth();
+                    setTimeout(() => {
+                        showLoosePopup();
+                        setTimeout(() => {
+                            location.reload();
+                        }, 3000);
+                    }, 10);
+                }
+
+                obstacle.dataset.collided = true;
+            }
+        });
+    };
+    const healthBar = document.querySelector('.health');
+    let health = 100;
+
+    const reduceHealth = () => {
+        health -= 20;
+        if (health < 0) health = 0;
+        healthBar.style.width = `${health}%`;
+    };
+    const showWinPopup = () => {
+        const popup = document.getElementById('win-popup');
+        popup.classList.remove('hidden');
+    };
+
+    const showLoosePopup = () => {
+        const popup = document.getElementById('loose-popup');
+        popup.classList.remove('hidden');
+    };
+
+
+    const tooltip = document.getElementById('tooltip');
+    const showTooltipBtn = document.querySelector('.show-tooltip-btn');
+
+    showTooltipBtn.addEventListener('click', () => {
+        tooltip.style.display = 'block';
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 3000);
+    });
+
+    navigator.permissions.query({ name: "gyroscope" }).then(function(permissionStatus) {
+        if (permissionStatus.state === 'granted') {
+            console.log("Доступ до гіроскопа надано.");
+        } else if (permissionStatus.state === 'denied') {
+            console.log("Доступ до гіроскопа відхилено.");
+        } else {
+            console.log("Доступ до гіроскопа очікується.");
+        }
+    });
+
+    if (window.matchMedia("(pointer: coarse)").matches) {
+
+        let sensor = new Gyroscope();
+        let x,y, z;
+
+        navigator.permissions.query({ name: 'gyroscope' }).then(function(permissionStatus) {
+            if (permissionStatus.state === 'granted') {
+                sensor.start();
+            } else {
+                console.log("Permission denied");
+            }
+        });
+
+        sensor.onreading = () => {
+            x = sensor.x * (90);
+            y = sensor.y * (60);
+            z = sensor.z * (-50);
+
+
+            if (screen.orientation.type === 'landscape-secondary') {
+                x *= -1;
+                y *= -1;
+            }
+            const currentTop = parseInt(window.getComputedStyle(hero).top, 10);
+            const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+
+            const newTop = currentTop - y;
+            const newLeft = currentLeft + x;
+
+
+            if (newTop >screenHeight/10 && newTop + heroHeight < -screenHeight/3.5 + screenHeight) {
+                hero.style.top = newTop + "px";
+            }
+
+            if (newLeft >  screenWidth/10 && newLeft + heroWidth < screenWidth - screenWidth/12) {
+                hero.style.left = newLeft + "px";
+            }
+        };
+
+        sensor.onerror = (event) => {
+            console.log(event.error.name, event.error.message);
+        };
+
+    }
+    else {
+        moveHero();
+    }
+
+    const gameLoop = () => {
+        checkCollision();
+        checkWinCollision();
+        requestAnimationFrame(gameLoop);
+    };
+
+    gameLoop();
+</script>
+
+</body>
+</html>
+
+

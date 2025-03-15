@@ -1,0 +1,31 @@
+{
+  "name": "Groundhog Day: Student`s way",
+  "short_name": "Groundhog Day",
+  "theme_color": "rgba(33,172,243,0.84)",
+  "background_color": "#33384e",
+  "display": "standalone",
+  "orientation": "landscape",
+  "start_url": "index.html",
+  "icons": [
+    {
+      "src":"icons/logo-96-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src":"icons/logo-144-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src":"icons/logo-256-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src":"icons/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

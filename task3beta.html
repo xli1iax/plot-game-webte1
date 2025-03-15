@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+    <title>Stairs to uni</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .background {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            object-fit: contain;
+
+        }
+
+        #background {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 200vh;
+            transition: transform 0.3s ease;
+            transform-origin: center;
+        }
+        .railing {
+            position: absolute;
+            height :30%;
+            width: auto;
+        }
+
+        #hero {
+            position: absolute;
+            left: 50%;
+            bottom: 12%;
+            width: 4%;
+            height: 12%;
+            transition: left 0.2s linear, top 0.2s linear, transform 0.2s linear;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 125px;
+            height: auto;
+        }
+
+        .tooltip {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .show-tooltip-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .show-tooltip-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup.hidden {
+            display: none;
+        }
+
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+        #score-counter {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        #score-counter img {
+            width: 50px;
+            height: auto;
+        }
+
+    </style>
+</head>
+<body>
+<div class="game">
+<div class="background">
+    <img id="background" src="plot/Stairs.jpg" alt="stairs">
+
+</div>
+<img id="hero" src="plot/static.PNG" alt="hero">
+
+<button class="show-tooltip-btn">Показати підказку</button>
+
+<div class="tooltip" id="tooltip">
+    Це спливаюча підказка! Вона з'являється в лівому нижньому кутку.
+</div>
+<div id="win-popup" class="popup hidden">
+    <div class="popup-content">
+        <h1>Congratulations!</h1>
+        <p>You've won the game!</p>
+        <button id="restart-button">Restart</button>
+    </div>
+</div>
+
+    <div id="score-counter"><img src="plot/crib.PNG" alt="crib"><span id="crib-counter">0</span></div>
+
+
+</div>
+<script>
+    const hero = document.querySelector('#hero');
+    const minX = window.innerWidth / 3;
+    const maxX = window.innerWidth - window.innerWidth/3;
+    const background = document.querySelector('#background');
+    const keys = {};
+
+    let movingForward = false;
+    let movingBack = false;
+    let backgroundPosition = 0;
+
+    let scaleFactor = 1;
+    const zoomSpeed = 0.00004;
+    const maxScale = 2;
+    const minScale = 1;
+
+
+    let lastTimestamp = 0;
+    let isMobile = false;
+
+    function moveHero() {
+        const currentTop = parseInt(window.getComputedStyle(hero).top, 10);
+        const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+
+        if (keys['ArrowUp'] ) {
+            hero.style.top = (currentTop - 15) + 'px';
+            movingForward = true;
+        }else {
+            movingForward = false;
+        }
+        if (keys['ArrowDown'] && currentTop < window.innerHeight - hero.offsetHeight  ){
+            hero.style.top = (currentTop + 15) + 'px'
+            movingBack = true;
+        }
+        if (keys['ArrowLeft'] && currentLeft > window.innerWidth/3  ) {
+            hero.style.left = (currentLeft - 20) + 'px';
+        }
+        if (keys['ArrowRight'] && currentLeft < (window.innerWidth - window.innerWidth/3)) {
+            hero.style.left = (currentLeft + 20) + 'px';
+        }
+
+        requestAnimationFrame(moveHero);
+    }
+
+
+    document.addEventListener('keydown', (event) => {
+        keys[event.key] = true;
+    });
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+        if (event.key === 'ArrowUp') {
+            movingForward = false;
+        }
+        if (event.key === 'ArrowDown') {
+            movingBack = false;
+        }
+    }) ;
+
+    if (window.matchMedia("(pointer: coarse)").matches) {
+        isMobile = true;
+        if ('Gyroscope' in window) {
+        let sensor = new Gyroscope();
+        let x, y, z;
+        navigator.permissions.query({ name: "gyroscope" }).then(function(permissionStatus) {
+            if (permissionStatus.state === 'granted') {
+                sensor.start();
+            } else {
+                console.log("Permission denied");
+            }
+        });
+        sensor.onreading = () => {
+            x = sensor.x * (90);
+            y = sensor.y * (60);
+            z = sensor.z * (-50);
+            if (screen.orientation.type === 'landscape-secondary') {
+                x *= -1;
+                y *= -1;
+            }
+            const currentTop = parseInt(window.getComputedStyle(hero).top, 10);
+            const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+
+            const newTop = currentTop - y;
+            const newLeft = currentLeft + x;
+            if (newTop > currentTop) {
+                movingBack = true
+                movingForward = false;
+            } else {
+                movingBack = false;
+                movingForward = true;
+            }
+
+            if (newTop <= window.innerHeight - hero.offsetHeight) {
+                hero.style.top = newTop + "px";
+            }
+
+            if (newLeft >= window.innerWidth/3 && newLeft <= window.innerWidth - window.innerWidth/3 - hero.offsetWidth) {
+                hero.style.left = newLeft + "px";
+            }
+
+        };
+        sensor.onerror = errorHandler;
+        function errorHandler(event) {
+            console.log(event.error.name, event.error.message);
+        }
+        }else {
+            console.log("Gyroscope not supported on this device.");
+        }
+    } else {
+        moveHero();
+    }
+
+    let speedObst;
+    let speedRailing;
+
+    if(isMobile) {
+        speedRailing = 2;
+        speedObst = 2;
+    } else {
+        speedRailing = 2;
+        speedObst = 3;
+    }
+
+    const obstacles = [];
+
+    const staticObstacles = [
+        { startY: '-200px', speed: speedObst, src: "plot/obstacle-person-1.PNG" },
+        { startY: '-2px', speed: speedObst, src: "plot/obstacle-person-2.PNG" },
+        { startY: '-12px', speed: speedObst, src: "plot/obstacle-person-3.PNG" },
+        { startY: '-13px', speed: speedObst, src: "plot/obstacle-person-4.PNG" },
+        { startY: '-16px', speed: speedObst, src: "plot/obstacle-person-5.PNG" },
+        { startY: '-75px', speed: speedObst, src: "plot/obstacle-person-7.PNG" },
+        { startY: '-350px', speed: speedObst, src: "plot/obstacle-person-3.PNG" },
+        { startY: '-300px', speed: speedObst, src: "plot/obstacle-person-5.PNG" },
+        { startY: '-124px', speed: speedObst, src: "plot/obstacle-person-3.PNG" },
+        { startY: '-213px', speed: speedObst, src: "plot/obstacle-person-2.PNG" },
+        { startY: '-432px', speed: speedObst, src: "plot/obstacle-person-7.PNG" }
+    ];
+
+    const createStaticObstacles = () => {
+        staticObstacles.forEach(obstacleData => {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+
+            const randomStartX = Math.random() * (maxX - minX) + minX;
+
+            obstacle.style.width = '6%';
+            obstacle.style.height = '10%';
+
+            obstacle.style.left = `${randomStartX}px`;
+            obstacle.style.top = obstacleData.startY;
+
+            obstacle.dataset.speed = obstacleData.speed;
+            obstacle.style.backgroundImage = `url("${obstacleData.src}")`;
+            obstacle.style.backgroundSize = 'contain';
+            obstacle.style.backgroundRepeat = 'no-repeat';
+            obstacle.style.backgroundPosition = 'center';
+
+            document.querySelector('.game').appendChild(obstacle);
+            obstacles.push(obstacle);
+        });
+    };
+    createStaticObstacles();
+
+    const moveObstacles = () => {
+        obstacles.forEach(obstacle => {
+            const speed = parseFloat(obstacle.dataset.speed);
+            const currentY = parseFloat(obstacle.style.top);
+            obstacle.style.top = `${currentY + speed}px`;
+        });
+    };
+    const railings = [];
+    const staticRailings = [
+        { startY: -window.innerHeight/2 ,  src: "plot/railing.PNG" },
+        { startY: 0, src: "plot/railing.PNG" },
+        { startY: -window.innerHeight-window.innerHeight/2 ,src: "plot/railing.PNG" },
+        { startY: -2*window.innerHeight , src: "plot/railing.PNG" },
+        { startY: -window.innerHeight, src: "plot/railing.PNG" }
+    ];
+    const createStaticRailings = () => {
+        staticRailings.forEach(railingData => {
+            const railing = document.createElement('div');
+            railing.classList.add('railing');
+            railing.style.width = '6%';
+            railing.style.height = `30%`;
+            railing.style.left = `49%`;
+            railing.style.top = `${railingData.startY}px`;
+            railing.style.backgroundImage = `url("${railingData.src}")`;
+            document.querySelector('.game').appendChild(railing);
+            railings.push(railing);
+        });
+    };createStaticRailings();
+    const moveRailings = () => {
+        if (!movingForward) return;
+        else if (movingForward) speedRailing *= 1;
+
+        railings.forEach(railing => {
+            const currentY = parseFloat(railing.style.top);
+            railing.style.top = `${currentY + speedRailing}px`;
+            if (currentY > window.innerHeight) {
+                railing.remove();
+            }
+        });
+    };
+
+    const checkCollisionWithRailings = () => {
+            const heroRect = hero.getBoundingClientRect();
+
+            railings.forEach(railing => {
+                const railingRect = railing.getBoundingClientRect();
+
+                const isOverlapping = !(
+                    heroRect.right < railingRect.left ||
+                    heroRect.left > railingRect.right  ||
+                    heroRect.bottom < railingRect.top ||
+                    heroRect.top > railingRect.bottom - heroHeight/2
+                );
+                if (isOverlapping && !railing.dataset.collided) {
+                    railing.dataset.collided = true;
+                    score--;
+                    updateScore();
+                }
+            });
+    };
+
+
+    const checkCollision = () => {
+        const heroRect = hero.getBoundingClientRect();
+
+        obstacles.forEach(obstacle => {
+            const obstacleRect = obstacle.getBoundingClientRect();
+
+            const isOverlapping = !(
+                heroRect.right < obstacleRect.left ||
+                heroRect.left > obstacleRect.right  ||
+                heroRect.bottom < obstacleRect.top ||
+                heroRect.top > obstacleRect.bottom
+            );
+            if (isOverlapping && !obstacle.dataset.collided) {
+                score++;
+                obstacle.dataset.collided = true;
+                updateScore();
+            }
+        });
+    };
+
+
+    const updateBackgroundTransform = () => {
+        background.style.transform = `translateY(${backgroundPosition}px) scale(${scaleFactor})`;
+        background.style.willChange = 'transform';
+    };
+
+    const animate = (timestamp) => {
+        const backgroundRect = background.getBoundingClientRect();
+        const deltaTime = timestamp - lastTimestamp;
+        lastTimestamp = timestamp;
+
+        if (movingForward && backgroundRect.top <= -50 ){
+            scaleFactor = Math.min(maxScale, scaleFactor + zoomSpeed * deltaTime);
+            backgroundPosition += 0.1 * deltaTime;
+        } else if (movingBack && backgroundRect.bottom > window.innerHeight) {
+            scaleFactor = Math.max(minScale, scaleFactor - zoomSpeed * deltaTime);
+            backgroundPosition -= 0.1 * deltaTime;
+        }
+        updateBackgroundTransform();
+        requestAnimationFrame(animate);
+    };
+
+    let screenWidth = window.innerWidth;
+    let heroHeight = hero.offsetHeight;
+    let screenHeight = window.innerHeight;
+    window.addEventListener('resize', () => {
+        screenWidth = window.innerWidth;
+        screenHeight = window.innerHeight;
+    });
+
+
+
+    const checkWinCondition = () => {
+        const heroTopPosition = hero.getBoundingClientRect().top;
+
+        if (heroTopPosition < -heroHeight/2) {
+            showWinPopup();
+        }
+    };
+    const showWinPopup = () => {
+        const popup = document.getElementById('win-popup');
+        popup.classList.remove('hidden');
+    };
+
+    const tooltip = document.getElementById('tooltip');
+    const showTooltipBtn = document.querySelector('.show-tooltip-btn');
+
+    showTooltipBtn.addEventListener('click', () => {
+        tooltip.style.display = 'block';
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 3000);
+    });
+    const gameLoop = () => {
+        moveObstacles();
+        checkCollision();
+        moveRailings();
+        checkCollisionWithRailings();
+        checkWinCondition();
+        requestAnimationFrame(gameLoop);
+        requestAnimationFrame(animate);
+    };
+
+    gameLoop();
+
+    let score = 0;
+
+    const updateScore = () => {
+        const scoreCounter = document.querySelector('#crib-counter');
+        scoreCounter.innerHTML= `${score}`;
+    };
+</script>
+
+</body>
+</html>

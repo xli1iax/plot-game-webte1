@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+    <title>lecture hall</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .background {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            object-fit: contain;
+
+        }
+
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            transition: transform 0.3s ease;
+            transform-origin: center;
+
+        }
+        .lecture-tables {
+            z-index: 2;
+        }
+        #table1 {
+            position: absolute;
+            top: 67%;
+            left: -0.8%;
+            height: 33%;
+            width: 58%;
+            /*z-index: 3;*/
+        }
+        .seat {
+            z-index: 1;
+            position: absolute;
+        }
+        #seat-a-1 {
+            top: 59.2%;
+            left: -2.7%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #seat-b-1 {
+            top: 59.6%;
+            left: 11%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #seat-c-1 {
+            top: 59.8%;
+            left: 24.7%;
+            height: 18%;
+            width: 18%;
+        }
+        #seat-d-1 {
+            top: 60%;
+            left: 37.6%;
+            height: 18%;
+            width: 18%;
+        }
+        #table2 {
+            position: absolute;
+            top: 45%;
+            left: -0.8%;
+            height: 33.6%;
+            width: 62.3%
+        }
+        #seat-a-2 {
+            top: 39.5%;
+            left: -2.7%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #seat-b-2 {
+            top: 40%;
+            left: 10.9%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #seat-c-2 {
+            top: 40.5%;
+            left: 24.5%;
+            height: 18%;
+            width: 18%;
+        }
+        #seat-d-2 {
+            top: 40.8%;
+            left: 37.4%;
+            height: 18%;
+            width: 18%;
+        }
+        #table3 {
+            position: absolute;
+            top: 26.4%;
+            left: -0.8%;
+            height: 36%;
+            width: 65.9%
+        }
+        #seat-a-3 {
+             top: 22%;
+             left: -2.4%;
+             height: 18%;
+             width: 18%;
+         }
+
+        #seat-b-3 {
+            top: 22.3%;
+            left: 11.1%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #seat-c-3 {
+            top: 22.3%;
+            left: 24.8%;
+            height: 18%;
+            width: 18%;
+        }
+        #seat-d-3 {
+            top: 22.5%;
+            left: 37.8%;
+            height: 18%;
+            width: 18%;
+        }
+        #seat-e-3 {
+            top: 22.7%;
+            left: 49.8%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #table4 {
+            position: absolute;
+            top: 8.7%;
+            left: -0.8%;
+            height: 38%;
+            width: 69.1%
+        }
+        #seat-a-4 {
+            top: 6%;
+            left: -2.6%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #seat-b-4 {
+            top: 6%;
+            left: 10.9%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #seat-c-4 {
+            top: 6%;
+            left: 24.5%;
+            height: 18%;
+            width: 18%;
+        }
+        #seat-d-4 {
+            top: 6.1%;
+            left: 37.4%;
+            height: 18%;
+            width: 18%;
+        }
+        #seat-e-4 {
+            top: 6%;
+            left: 49.9%;
+            height: 18%;
+            width: 18%;
+        }
+
+        #hero {
+            position: absolute;
+            left: 42%;
+            bottom: -1%;
+            width: 8%;
+            height: 15%;
+            transition: left 0.2s linear, top 0.2s linear, transform 0.2s linear;
+        }
+
+        .tooltip {
+            position: fixed;
+
+            left: 20px;
+            bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .show-tooltip-btn,
+        .show-task-tooltip-btn {
+            position: absolute;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .show-tooltip-btn {
+            top: 20px;
+            left: 2%;
+            width: 15%;
+            height: 4.5%;
+        }
+
+        .show-task-tooltip-btn {
+            top: 2%;
+            left: 20%;
+            width: 15%;
+            height: 4.5%;
+        }
+
+        .show-tooltip-btn:hover,
+        .show-task-tooltip-btn:hover {
+            background-color: #0056b3;
+        }
+
+        @media screen and (max-width: 1000px) {
+            .show-task-tooltip-btn,
+            .show-tooltip-btn {
+                font-size: 10px;
+                padding: 5px;
+                width: auto;
+                min-width: 80px;
+            }
+        }
+
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup.hidden {
+            display: none;
+        }
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+
+    </style>
+</head>
+<body>
+<div class="game">
+    <div class="background">
+        <img id="background" src="plot/lecture-hall.JPG" alt="lecture hall">
+        <div class="lecture-tables">
+
+            <div class="lecture-seats">
+                <img id="table1" class="table" src="plot/lecture-table1-selected.PNG" alt="lecture table">
+                <img id="seat-a-1" class="seat selected" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-b-1" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-c-1" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-d-1" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+
+            </div>
+            <div class="lecture-seats">
+                <img id="table2" class="table" src="plot/lecture-table2.PNG" alt="lecture table">
+                <img id="seat-a-2" class="seat selected" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-b-2" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-c-2" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-d-2" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+
+            </div>
+
+            <div class="lecture-seats">
+                <img id="table3" class="table" src="plot/lecture-table3.PNG" alt="lecture table">
+                <img id="seat-a-3" class="seat selected" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-b-3" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-c-3" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-d-3" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-e-3" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+
+            </div>
+
+            <div class="lecture-seats">
+                <img id="table4" class="table" src="plot/lecture-table4.PNG" alt="lecture table">
+                <img id="seat-a-4" class="seat selected" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-b-4" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-c-4" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-d-4" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+                <img id="seat-e-4" class="seat" src="plot/lecture-seat.PNG" alt="lecture seat">
+
+            </div>
+        </div>
+
+    </div>
+    <img id="hero" src="plot/hero-back.PNG" alt="hero">
+
+    <div class="tooltips">
+        <div>
+            <button class="show-tooltip-btn">Показати підказку</button>
+
+            <div class="tooltip" id="tooltip">
+                Це спливаюча підказка! Вона з'являється в лівому нижньому кутку.
+            </div>
+        </div>
+        <div>
+            <button class="show-task-tooltip-btn">Показати завдання</button>
+
+            <div class="tooltip" id="task-tooltip">
+                    твоє місце вцлзщйцлвзщлйвзлй
+            </div>
+        </div>
+    </div>
+
+    <div id="win-popup" class="popup hidden">
+        <div class="popup-content">
+            <h1>Congratulations!</h1>
+            <p>You've won the game!</p>
+            <button id="restart-button">Restart</button>
+        </div>
+    </div>
+</div>
+<script>
+    const background = document.querySelector("#background");
+    const hero = document.querySelector('#hero');
+
+    let isMobile = false;
+    const keys = {};
+    let currentSeat = 0;
+    let currentTable = 1;
+
+    const selectedTables = [
+        {tableNumber: 1, totalSeats: 4, selectSrc: "plot/lecture-table1-selected.PNG", nonSelectSrc: "plot/lecture-table1.PNG", htmlElementId: "#table1"},
+        {tableNumber: 2, totalSeats: 4, selectSrc: "plot/lecture-table2-selected.PNG", nonSelectSrc: "plot/lecture-table2.PNG", htmlElementId: "#table2"},
+        {tableNumber: 3, totalSeats: 5, selectSrc: "plot/lecture-table3-selected.PNG", nonSelectSrc: "plot/lecture-table3.PNG", htmlElementId: "#table3"},
+        {tableNumber: 4, totalSeats: 5, selectSrc: "plot/lecture-table4-selected.PNG", nonSelectSrc: "plot/lecture-table4.PNG", htmlElementId: "#table4"}
+    ];
+
+    const selectedSeat = [
+        {seatNumber: 1, tableNumber: 1, htmlElementId: "#seat-a-1"},
+        {seatNumber: 2, tableNumber: 1, htmlElementId: "#seat-b-1"},
+        {seatNumber: 3, tableNumber: 1, htmlElementId: "#seat-c-1"},
+        {seatNumber: 4, tableNumber: 1, htmlElementId: "#seat-d-1"},
+        {seatNumber: 1, tableNumber: 2, htmlElementId: "#seat-a-2"},
+        {seatNumber: 2, tableNumber: 2, htmlElementId: "#seat-b-2"},
+        {seatNumber: 3, tableNumber: 2, htmlElementId: "#seat-c-2"},
+        {seatNumber: 4, tableNumber: 2, htmlElementId: "#seat-d-2"},
+        {seatNumber: 1, tableNumber: 3, htmlElementId: "#seat-a-3"},
+        {seatNumber: 2, tableNumber: 3, htmlElementId: "#seat-b-3"},
+        {seatNumber: 3, tableNumber: 3, htmlElementId: "#seat-c-3"},
+        {seatNumber: 4, tableNumber: 3, htmlElementId: "#seat-d-3"},
+        {seatNumber: 5, tableNumber: 3, htmlElementId: "#seat-e-3"},
+        {seatNumber: 1, tableNumber: 4, htmlElementId: "#seat-a-4"},
+        {seatNumber: 2, tableNumber: 4, htmlElementId: "#seat-b-4"},
+        {seatNumber: 3, tableNumber: 4, htmlElementId: "#seat-c-4"},
+        {seatNumber: 4, tableNumber: 4, htmlElementId: "#seat-d-4"},
+        {seatNumber: 5, tableNumber: 4, htmlElementId: "#seat-e-4"}
+    ];
+    let previousState = { table: currentTable, seat: currentSeat, row: 1 };
+
+    function addRemoveSelectClass() {
+        const tableIndex = currentTable - 1;
+        const seatIndex = currentSeat - 1;
+        if (tableIndex < 0 || tableIndex >= selectedTables.length) return;
+        if (seatIndex < 0 || seatIndex >= selectedTables[tableIndex].totalSeats) return;
+
+        selectedTables.forEach((table, index) => {
+            const tableElement = document.querySelector(table.htmlElementId);
+
+            if (!tableElement) return;
+
+            if (index === tableIndex) {
+                tableElement.src = new URL(table.selectSrc, window.location.href).href;
+            } else {
+                tableElement.src = new URL(table.nonSelectSrc, window.location.href).href;
+            }
+        });
+
+        selectedSeat.forEach((seat) => {
+            const seatElement = document.querySelector(seat.htmlElementId);
+
+            if (seat.tableNumber === currentTable) {
+                if (seat.seatNumber === currentSeat) {
+                    seatElement.src = new URL("plot/lecture-seat-selected.PNG", window.location.href).href;
+                } else {
+                    seatElement.src = new URL("plot/lecture-seat.PNG", window.location.href).href;
+                }
+            } else {
+                seatElement.src = new URL("plot/lecture-seat.PNG", window.location.href).href;
+            }
+        });
+    }
+
+    function moveHero() {
+        console.log(`Moving hero to Table: ${currentTable}, Seat: ${currentSeat}`);
+        addRemoveSelectClass();
+
+        if (currentTable === generatedTable && currentSeat === generatedSeat) {
+            showWinPopup();
+        }
+    }
+
+    function checkAndMoveHero() {
+        if (previousState.table !== currentTable || previousState.seat !== currentSeat) {
+            moveHero();
+
+            previousState.table = currentTable;
+            previousState.seat = currentSeat;
+        }
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowUp') {
+            currentTable = currentTable === 4 ? 1 : currentTable + 1;
+            currentSeat = 1;
+        } else if (event.key === 'ArrowDown') {
+            currentTable = currentTable === 1 ? 4 : currentTable - 1;
+            currentSeat = 1;
+        } else if (event.key === 'ArrowLeft') {
+            if (currentSeat === 1) {
+                currentSeat = selectedTables[currentTable - 1].totalSeats;
+            } else {
+                currentSeat -= 1;
+            }
+        } else if (event.key === 'ArrowRight') {
+            if (currentSeat === selectedTables[currentTable - 1].totalSeats) {
+                currentSeat = 1;
+            } else {
+                currentSeat += 1;
+            }
+        }
+
+        checkAndMoveHero();
+    });
+
+
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    });
+
+    let generatedSeat = null;
+    let generatedTable = null;
+    function generateSeat() {
+        const randomSeat = Math.floor(Math.random() * 5) + 1;
+        const randomTable = Math.floor(Math.random() * 4) + 1;
+        const seatLabel = ["A", "B", "C", "D", "E"][randomSeat - 1];
+        generatedSeat = randomSeat;
+        generatedTable = randomTable;
+        const tooltip = document.getElementById('task-tooltip');
+        const showTooltipBtn = document.querySelector('.show-task-tooltip-btn');
+
+        showTooltipBtn.addEventListener('click', () => {
+            tooltip.innerText = `Your Seat: ${seatLabel} at Table: ${randomTable}`;
+            tooltip.style.display = 'block';
+            setTimeout(() => {
+                tooltip.style.display = 'none';
+            }, 3000);
+        });
+    }
+
+    generateSeat();
+
+    function showWinPopup() {
+        console.log("Pop-up triggered!");
+        const winPopup = document.getElementById('win-popup');
+        winPopup.classList.remove('hidden');
+
+        const restartButton = document.getElementById('restart-button');
+        restartButton.addEventListener('click', () => {
+            winPopup.classList.add('hidden');
+        });
+    }
+    navigator.permissions.query({ name: "gyroscope" }).then(function(permissionStatus) {
+        if (permissionStatus.state === 'granted') {
+            console.log("Доступ до гіроскопа надано.");
+        } else if (permissionStatus.state === 'denied') {
+            console.log("Доступ до гіроскопа відхилено.");
+        } else {
+            console.log("Доступ до гіроскопа очікується.");
+        }
+    });
+
+    if (window.matchMedia("(pointer: coarse)").matches) {
+        let sensor = new Gyroscope();
+        let x, y, z;
+
+        navigator.permissions.query({ name: 'gyroscope' }).then(function(permissionStatus) {
+            if (permissionStatus.state === 'granted') {
+                sensor.start();
+            } else {
+                console.log("Permission denied");
+            }
+        });
+
+        sensor.onreading = () => {
+            x = sensor.x * (90);
+            y = sensor.y * (60);
+            z = sensor.z * (-50);
+
+            if (screen.orientation.type === 'landscape-secondary') {
+                x *= -1;
+                y *= -1;
+            }
+
+            handleMovement(x, y);
+        };
+
+        sensor.onerror = errorHandler;
+
+        function errorHandler(event) {
+            console.log(event.error.name, event.error.message);
+        }
+
+        function handleMovement(x, y) {
+            if (Math.abs(x) > 10) {
+                if (x > 0) {
+                    moveRight();
+                } else {
+                    moveLeft();
+                }
+            }
+            if (Math.abs(y) > 10) {
+                if (y > 0) {
+                    moveDown();
+                } else {
+                    moveUp();
+                }
+            }
+        }
+
+        function moveUp() {
+            currentTable = currentTable === 1 ? 4 : currentTable - 1;
+            currentSeat = 1;
+            moveHero();
+        }
+
+        function moveDown() {
+            currentTable = currentTable === 4 ? 1 : currentTable + 1;
+            currentSeat = 1;
+            moveHero();
+        }
+
+        function moveLeft() {
+            if (currentSeat === 1) {
+                currentSeat = selectedTables[currentTable - 1].totalSeats;
+            } else {
+                currentSeat -= 1;
+            }
+            moveHero();
+        }
+
+        function moveRight() {
+            if (currentSeat === selectedTables[currentTable - 1].totalSeats) {
+                currentSeat = 1;
+            } else {
+                currentSeat += 1;
+            }
+            moveHero();
+        }
+
+    } else {
+        moveHero();
+    }
+    const tooltip = document.getElementById('tooltip');
+    const showTooltipBtn = document.querySelector('.show-tooltip-btn');
+
+    showTooltipBtn.addEventListener('click', () => {
+        tooltip.style.display = 'block';
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 3000);
+    });
+    const gameLoop = () => {
+        requestAnimationFrame(gameLoop);
+    };
+    gameLoop();
+
+</script>
+</body>
+</html>

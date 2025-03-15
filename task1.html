@@ -1,10 +1,339 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Double Jump Fix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+
+        @keyframes obstacleMove {
+            0% {
+                left: 20%;
+            }
+            100% {
+                left: -10%;
+            }
+        }
+        #hero {
+            position: absolute;
+            left: 0;
+            top: calc(99vh - 400px); /* Початковий рівень підлоги */
+            width: 200px;
+            height: 300px;
+        }
+
+        .background {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .jump {
+            animation: jump 5s linear;
+        }
+
+        @keyframes jump {
+            0% {
+                top: calc(99vh - 400px - 150px);
+            }
+            30% {
+                top: calc(99vh - 400px - 130px);
+            }
+            50% {
+                top: calc(99vh - 400px - 80px);
+            }
+            80% {
+                top: calc(99vh - 400px - 130px);
+            }
+            100% {
+                top: calc(99vh - 400px - 150px);
+            }
+        }
+
+        .jump2D {
+            animation: jump2D 2s linear;
+        }
+
+        @keyframes jump2D {
+            0% {
+                top: calc(99vh - 400px - 150px);
+            }
+            30% {
+                top: calc(99vh - 400px - 200px);
+            }
+            50% {
+                top: calc(99vh - 400px - 150px);
+            }
+            80% {
+                top: calc(99vh - 400px - 130px);
+            }
+            100% {
+                top: calc(99vh - 400px - 150px);
+            }
+        }
+
+        .obstacle {
+            position: absolute;
+            bottom: 150px;
+            width: 150px;
+            height: auto;
+            z-index: 3;
+        }
+
+        .small-puddle {
+            background: url("plot/puddle_small.PNG") no-repeat center/contain;
+        }
+
+        .big-puddle {
+            background: url("plot/pudlle_big.PNG") no-repeat center/contain;
+        }
+
+    </style>
 </head>
 <body>
-$END$
+<div class="game">
+    <div class="background">
+        <img id="background" src="plot/task1.JPG" alt="nature">
+    </div>
+    <img src="plot/static.PNG" alt="hero" id="hero">
+    <img src="plot/puddle_small.PNG" alt="puddle"  id="puddle-small">
+
+    <img src="plot/pudlle_big.PNG" alt="puddle"  id="puddle-big">
+
+</div>
+<script>
+    const hero = document.querySelector('#hero');
+    let leftPosition = 0;
+    const keys = {};
+    const background = document.getElementById('background');
+    let backgroundPosition = 0;
+    let backgroundSpeed = 2;
+    let isMovingRight = false;
+    let runAnimationInterval = null;
+    const obstacles = [];
+
+
+    let isJumping = false;
+    let isStanding = true;
+    const runningImages = ["plot/run1.PNG", "plot/run2.PNG"];
+    const jumpingImage = "plot/jump.PNG";
+    const standingImage = "plot/static.PNG";
+    let currentRunningImage = 0;
+    const singleJump = () => {
+        if(!hero.classList.contains("jump")) {
+            hero.classList.add("jump");
+        }
+        isJumping = true
+        hero.src = jumpingImage;
+        setTimeout(() => {
+            hero.classList.remove("jump");
+            isJumping = false;
+
+            if (!isMovingRight) {
+                hero.src = standingImage;
+            }
+
+        }, 1500);
+    };
+
+
+    const doubleJump = () => {
+        if(!hero.classList.contains("jump2D")) {
+            hero.classList.add("jump2D");
+        }
+        isJumping = true
+        hero.src = jumpingImage;
+        setTimeout(() => {
+            hero.classList.remove("jump2D");
+            isJumping = false;  // Тепер герой приземлився
+
+            // Якщо герой не рухається, показуємо зображення стояння
+            if (!isMovingRight) {
+                hero.src = standingImage;
+            }
+
+        }, 1500);  // Тривалість анімації стрибка
+    };
+
+    const toggleRunningImage = () => {
+        if (isJumping || !isMovingRight) return;
+        currentRunningImage = (currentRunningImage + 1) % runningImages.length; // Перемикаємо між 0 і 1
+        hero.src = runningImages[currentRunningImage]; // Оновлюємо зображення героя
+    };
+
+    // Відслідковуємо натискання кнопок
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'z' && !isJumping && !keys['x']) {  // Якщо натиснуто Z для одинарного стрибка
+            singleJump()  // Викликаємо одинарний стрибок
+        } else if (event.key === 'x' && !isJumping && !keys['z']) {  // Якщо натиснуто X для подвійного стрибка
+            doubleJump()
+        } else if (event.key === 'ArrowRight') {
+            if (!keys[event.key]) {
+                keys[event.key] = true;
+                if (!isMovingRight) { // Починаємо рух вправо
+                    isMovingRight = true;
+                    moving = true; // Персонаж рухається, фон також повинен рухатись
+                    isStanding = false;
+                    if (!isJumping) {
+                        runAnimationInterval = setInterval(toggleRunningImage, 200); // Змінюємо зображення кожні 200 мс
+                    }
+                }
+            }
+        }
+        keys[event.key] = true;
+    });
+
+    // Відслідковуємо відпускання кнопок
+    document.addEventListener('keyup', (event) => {
+        if (event.key === 'ArrowRight') {
+            delete keys[event.key];
+            isMovingRight = false; // Зупиняємо рух вправо
+            clearInterval(runAnimationInterval); // Зупиняємо анімацію бігу
+            runAnimationInterval = null;
+            moving = false;
+            if (!isJumping) {
+                hero.src = standingImage; // Встановлюємо зображення стояння
+                isStanding = true;
+            }
+        }
+        if (event.key === 'z' && !keys['ArrowRight']) {  // Якщо натиснуто Z для одинарного стрибка
+            isJumping = false;
+            hero.src = standingImage;
+            // Викликаємо одинарний стрибок
+        } else if (event.key === 'x' && !keys['ArrowRight']) {  // Якщо натиснуто Z для одинарного стрибка
+            isJumping = false;
+            hero.src = standingImage;
+        }
+        delete keys[event.key];
+    });
+
+    let moving = false;
+    const moveBackground = () => {
+        if (moving) {
+            backgroundPosition -= backgroundSpeed;
+        }
+        background.style.transform = translateX(`${backgroundPosition}px`);
+    };
+    let moveSpeed = 5;
+    // Рух героя по екрану
+    const moveHero = () => {
+
+        if (keys['ArrowRight']) {
+            leftPosition += moveSpeed;
+            hero.style.left = `${leftPosition}px`;
+        }
+    };
+
+    // Основний цикл
+    setInterval(() => {
+        moveHero();
+        moveBackground();
+    }, 50);
+    const createObstacle = (type, startX, speed) => {
+        const obstacle = document.createElement('div');
+        obstacle.classList.add('obstacle', type);
+
+        // Встановлюємо відстань між перешкодами
+        const horizontalOffset = 400; // Відстань між перешкодами (від 100px до 400px)
+
+        if (type === 'small-puddle') {
+            obstacle.style.width = '200px';
+            obstacle.style.height = '100px';
+        } else if (type === 'big-puddle') {
+            obstacle.style.width = '400px';
+            obstacle.style.height = '200px';
+        }
+
+        // Задаємо початкову позицію, додаючи випадковий зсув
+        obstacle.style.left = `${startX + horizontalOffset}px`;
+        obstacle.style.bottom = `75px`; // Фіксоване розташування по вертикалі
+        obstacle.dataset.speed = speed;
+
+        document.querySelector('.game').appendChild(obstacle);
+        obstacles.push(obstacle);
+    };
+
+    const obstacleInterval = 5000;
+    setInterval(() => {
+        // Генеруємо випадкову калюжу (маленька або велика)
+        const isSmall = Math.random() > 0.5;
+        const type = isSmall ? 'small-puddle' : 'big-puddle';
+
+        // Визначаємо початкову позицію для калюжі
+        const startX = window.innerWidth +  200; // Початкова позиція за правим краєм екрану
+
+        // Додаємо калюжу з початковою позицією
+        createObstacle(type, startX, 2); // Швидкість калюжі можна налаштувати
+    }, obstacleInterval);
+    const moveObstacles = () => {
+        obstacles.forEach(obstacle => {
+            const speed = parseFloat(obstacle.dataset.speed);
+            const currentX = parseFloat(obstacle.style.left);
+            obstacle.style.left = `${currentX - speed}px`;
+
+            // Якщо калюжа виходить за межі екрану, видаляємо її
+            if (currentX < -200) {
+                obstacle.remove();
+            }
+        });
+    };
+    // Функція для перевірки, чи наступив герой на перешкоду
+    // Функція для перевірки, чи наступив герой на перешкоду
+    const checkCollision = () => {
+        const heroRect = hero.getBoundingClientRect();  // Отримуємо розмір і позицію героя
+        obstacles.forEach(obstacle => {
+            // Якщо колізія ще не була перевірена для цієї перешкоди
+            if (!obstacle.dataset.collided) {
+                const obstacleRect = obstacle.getBoundingClientRect();  // Отримуємо розмір і позицію перешкоди
+
+                // Вивести координати для перевірки
+                console.log('Hero position:', heroRect);
+                console.log('Obstacle position:', obstacleRect);
+
+                // Додатковий відступ для визначення близькості
+                const collisionDistance = -50; // Відстань для спрацьовування попередження
+
+                // Перевірка на колізію з відступом
+                if (
+                    heroRect.right > obstacleRect.left - collisionDistance &&  // Герой праворуч від перешкоди
+                    heroRect.left < obstacleRect.right + collisionDistance &&  // Герой ліворуч від перешкоди
+                    heroRect.bottom > obstacleRect.top - collisionDistance &&  // Герой знаходиться нижче перешкоди
+                    heroRect.top < obstacleRect.bottom + collisionDistance     // Герой знаходиться вище перешкоди
+                ) {
+                    // Якщо відбулася колізія
+                    alert("You are very close to the obstacle!");  // Виводимо попередження
+                    obstacle.dataset.collided = true;  // Встановлюємо прапорець колізії
+                }
+            }
+        });
+    };
+
+    // Основний цикл гри
+    const gameLoop = () => {
+        moveObstacles();
+        checkCollision();  // Перевіряємо колізії в кожному циклі
+        requestAnimationFrame(gameLoop);  // Оновлюємо гру
+    };
+
+    gameLoop();
+
+
+</script>
+
 </body>
 </html>

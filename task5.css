@@ -1,0 +1,132 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+.game {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+.background {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    object-fit: contain;
+}
+
+#background {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 200vh;
+    transition: transform 0.3s ease;
+    transform-origin: center;
+}
+#hero {
+    position: absolute;
+    left: 42%;
+    bottom: -1%;
+    width: 8%;
+    height: 15%;
+    transition: left 0.2s linear, top 0.2s linear, transform 0.2s linear;
+}
+
+.tooltip {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    display: none;
+    z-index: 1000;
+}
+
+.show-tooltip-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.show-tooltip-btn:hover {
+    background-color: #0056b3;
+}
+
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup.hidden {
+    display: none;
+}
+.popup-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.popup-content h1 {
+    margin: 0 0 10px;
+    font-size: 24px;
+}
+
+.popup-content button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.popup-content button:hover {
+    background-color: #45a049;
+}
+#score-counter{
+    position: fixed;
+    top: 10px;
+    width: 4%;
+    height: 4%;
+    right: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    z-index: 1000;
+}
+
+
+#score-counter img {
+    width: 50px;
+    height: auto;
+}
+
+.obstacle {
+    position: absolute;
+    width: 125px;
+    height: auto;
+}

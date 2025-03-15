@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <title>Double Jump Fix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+
+        @keyframes obstacleMove {
+            0% {
+                left: 20%;
+            }
+            100% {
+                left: -10%;
+            }
+        }
+        #hero {
+            position: absolute;
+            left: 0;
+            top: calc(99vh - 400px);
+            width: 200px;
+            height: 300px;
+        }
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100vh;
+            overflow-x: hidden;
+            transform: translateX(0);
+        }
+
+        #background {
+            width: 200%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .jump {
+            animation: jump 5s linear;
+        }
+
+        @keyframes jump {
+            0% {
+                top: calc(99vh - 400px - 150px);
+            }
+            30% {
+                top: calc(99vh - 400px - 130px);
+            }
+            50% {
+                top: calc(99vh - 400px - 80px);
+            }
+            80% {
+                top: calc(99vh - 400px - 130px);
+            }
+            100% {
+                top: calc(99vh - 400px - 150px);
+            }
+        }
+
+        .jump2D {
+            animation: jump2D 2s linear;
+        }
+
+        @keyframes jump2D {
+            0% {
+                top: calc(99vh - 400px - 150px);
+            }
+            30% {
+                top: calc(99vh - 400px - 200px);
+            }
+            50% {
+                top: calc(99vh - 400px - 150px);
+            }
+            80% {
+                top: calc(99vh - 400px - 130px);
+            }
+            100% {
+                top: calc(99vh - 400px - 150px);
+            }
+        }
+
+        .obstacle {
+            position: absolute;
+            bottom: 150px;
+            width: 150px;
+            height: auto;
+            z-index: 3;
+        }
+
+        .small-puddle {
+            background: url("plot/puddle_small.PNG") no-repeat center/contain;
+        }
+
+        .big-puddle {
+            background: url("plot/pudlle_big.PNG") no-repeat center/contain;
+        }
+        .health-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            border: 2px solid #000;
+            background-color: #fff;
+            z-index: 10;
+        }
+
+        .health {
+            height: 100%;
+            width: 100%;
+            background-color: green;
+            transition: width 0.3s ease;
+        }
+        .tooltip {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .show-tooltip-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .show-tooltip-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup.hidden {
+            display: none;
+        }
+
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .popup-content button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .popup-content button:hover {
+            background-color: #45a049;
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="game">
+    <div class="background">
+        <img id="background" src="plot/task1.JPG" alt="nature">
+    </div>
+    <img src="plot/static.PNG" alt="hero" id="hero">
+    <button class="show-tooltip-btn">Показати підказку</button>
+
+    <div class="tooltip" id="tooltip">
+        Це спливаюча підказка! Вона з'являється в лівому нижньому кутку.
+    </div>
+    <div class="health-bar">
+        <div class="health"></div>
+    </div>
+    <div id="win-popup" class="popup hidden">
+        <div class="popup-content">
+            <h1>Congratulations!</h1>
+            <p>You've won the game!</p>
+            <button id="restart-button">Restart</button>
+        </div>
+    </div>
+</div>
+<script>
+    const hero = document.querySelector('#hero');
+    let leftPosition = 0;
+    const keys = {};
+    const background = document.getElementById('background');
+    let backgroundPosition = 0;
+    let backgroundSpeed = 2;
+    let isMovingRight = false;
+    let runAnimationInterval = null;
+    let isJumping = false;
+    let isStanding = true;
+    const runningImages = ["plot/run1.PNG", "plot/static.PNG", "plot/run2.PNG"];
+    const jumpingImage = "plot/jump.PNG";
+    const standingImage = "plot/static.PNG";
+    let currentRunningImage = 0;
+
+
+
+
+    const obstacles = [];
+
+    const staticObstacles = [
+        { type: 'small-puddle', startX: 800, speed: 3 },
+        { type: 'big-puddle', startX: 1200, speed: 3 },
+        { type: 'small-puddle', startX: 1800, speed: 3 },
+        { type: 'big-puddle', startX: 2000, speed: 3 },
+        { type: 'big-puddle', startX: 2400, speed: 3 }
+    ];
+
+    const createStaticObstacles = () => {
+        staticObstacles.forEach(obstacleData => {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle', obstacleData.type);
+
+            if (obstacleData.type === 'small-puddle') {
+                obstacle.style.width = '200px';
+                obstacle.style.height = '100px';
+                obstacle.style.bottom = '75px';
+            } else if (obstacleData.type === 'big-puddle') {
+                obstacle.style.width = '400px';
+                obstacle.style.height = '200px';
+                obstacle.style.bottom = '30px';
+            }
+
+            obstacle.style.left = `${obstacleData.startX}px`;
+            obstacle.dataset.speed = obstacleData.speed;
+
+            document.querySelector('.game').appendChild(obstacle);
+            obstacles.push(obstacle);
+        });
+    };
+
+    createStaticObstacles();
+
+    const moveObstacles = () => {
+        obstacles.forEach(obstacle => {
+            const speed = parseFloat(obstacle.dataset.speed);
+            const currentX = parseFloat(obstacle.style.left);
+            obstacle.style.left = `${currentX - speed}px`;
+
+            if (currentX < -200) {
+                obstacle.remove();
+            }
+        });
+    };
+    const singleJump = () => {
+        if(!hero.classList.contains("jump")) {
+            hero.classList.add("jump");
+        }
+        isJumping = true
+        hero.src = jumpingImage;
+        setTimeout(() => {
+            hero.classList.remove("jump");
+            isJumping = false;
+
+            if (!isMovingRight) {
+                hero.src = standingImage;
+            }
+
+        }, 800);
+    };
+
+    const doubleJump = () => {
+        if(!hero.classList.contains("jump2D")) {
+            hero.classList.add("jump2D");
+        }
+        isJumping = true
+        hero.src = jumpingImage;
+        setTimeout(() => {
+            hero.classList.remove("jump2D");
+            isJumping = false;
+
+            if (!isMovingRight) {
+                hero.src = standingImage;
+            }
+
+        }, 1200);
+    };
+
+    const toggleRunningImage = () => {
+        if (isJumping || !isMovingRight) return;
+        currentRunningImage = (currentRunningImage + 1) % runningImages.length;
+        hero.src = runningImages[currentRunningImage];
+    };
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'z' && !isJumping && !keys['x']) {
+            singleJump();
+        } else if (event.key === 'x' && !isJumping && !keys['z']) {
+            doubleJump();
+        } else if (event.key === 'ArrowRight') {
+            if (!keys[event.key]) {
+                keys[event.key] = true;
+                if (!isMovingRight) {
+                    isMovingRight = true;
+                    moving = true;
+                    isStanding = false;
+                    if (!isJumping) {
+                        runAnimationInterval = setInterval(toggleRunningImage, 200);
+                    }
+                }
+            }
+        }
+        keys[event.key] = true;
+    });
+
+    document.addEventListener('keyup', (event) => {
+        if (event.key === 'ArrowRight') {
+
+            isMovingRight = false;
+            clearInterval(runAnimationInterval);
+            runAnimationInterval = null;
+            moving = false;
+            if (!isJumping) {
+                hero.src = standingImage;
+                isStanding = true;
+            }
+        }
+        if (event.key === 'z' && !keys['ArrowRight']) {
+            isJumping = false;
+            hero.src = standingImage;
+        } else if (event.key === 'x' && !keys['ArrowRight']) {
+            isJumping = false;
+            hero.src = standingImage;
+        }
+        delete keys[event.key];
+    });
+
+    let moving = false;
+    const moveBackground = () => {
+        if (moving) {
+            backgroundPosition -= backgroundSpeed;
+        }
+        background.style.transform = `translateX(${backgroundPosition}px)`;
+    };
+    let moveSpeed;
+    const moveHero = () => {
+        moveSpeed = 5;
+        if (keys['ArrowRight'] || isMovingRight) {
+            if (hero.classList.contains('jump2D')) {
+                moveSpeed = 15
+            } else if (hero.classList.contains('jump')) {
+                moveSpeed = 10;
+            }
+            leftPosition += moveSpeed;
+            hero.style.left = `${leftPosition}px`;
+        }
+
+    };
+
+    setInterval(() => {
+        moveHero();
+        moveBackground();
+    }, 50);
+
+    const healthBar = document.querySelector('.health');
+    let health = 100;
+    let collisionCount = 0;
+
+    const reduceHealth = () => {
+        health -= 20;
+        if (health < 0) health = 0;
+        healthBar.style.width = `${health}%`;
+    };
+
+    const checkCollision = () => {
+        const heroRect = hero.getBoundingClientRect();
+
+        obstacles.forEach(obstacle => {
+            const obstacleRect = obstacle.getBoundingClientRect();
+
+            const isOverlapping = !(
+                heroRect.right < obstacleRect.left + 50 ||
+                heroRect.left > obstacleRect.right - 100 ||
+                heroRect.bottom < obstacleRect.top +50 ||
+                heroRect.top > obstacleRect.bottom
+            );
+
+            if (isOverlapping && !obstacle.dataset.collided) {
+                collisionCount++;
+                reduceHealth();
+
+                if (collisionCount >= 5) {
+                    alert("Game Over! You've hit 5 obstacles.");
+                    location.reload();
+                }
+
+                obstacle.dataset.collided = true;
+            }
+        });
+    };
+
+    const showWinPopup = () => {
+        const popup = document.getElementById('win-popup');
+        popup.classList.remove('hidden');
+    };
+
+    const restartGame = () => {
+        location.reload();
+    };
+
+    document.getElementById('restart-button').addEventListener('click', restartGame);
+
+    const checkWinCondition = () => {
+        const heroLeftPosition = hero.getBoundingClientRect().left;
+        const screenWidth = window.innerWidth;
+
+        if (heroLeftPosition > screenWidth) {
+            showWinPopup();
+        }
+    };
+
+    navigator.permissions.query({ name: "gyroscope" }).then(function(permissionStatus) {
+        if (permissionStatus.state === 'granted') {
+            console.log("Доступ до гіроскопа надано.");
+        } else if (permissionStatus.state === 'denied') {
+            console.log("Доступ до гіроскопа відхилено.");
+        } else {
+            console.log("Доступ до гіроскопа очікується.");
+        }
+    });
+
+    if (window.matchMedia("(pointer: coarse)").matches) {
+        isMobile = true;
+        let sensor = new Gyroscope();
+        let x, y, z;
+        navigator.permissions.query({ name: 'gyroscope' }).then(function(permissionStatus) {
+            if (permissionStatus.state === 'granted') {
+                sensor.start();
+            } else {
+                console.log("Permission denied");
+            }
+        });
+
+        sensor.onreading = () => {
+            x = sensor.x * 90;
+            y = sensor.y * 60;
+            z = sensor.z * -50;
+
+            if (screen.orientation.type === 'landscape-secondary') {
+                x *= -1;
+                y *= -1;
+            }
+            if (x > 15) {
+                isMovingRight = true;
+                if (!isJumping) {
+                    runAnimationInterval = setInterval(toggleRunningImage, 200);
+                }
+                moveHero();
+            } else if (x < -15) {
+                isMovingRight = false;
+                clearInterval(runAnimationInterval);
+                moving = false;
+                hero.src = standingImage;
+            }
+
+            if (y > 20 && !isJumping && !keys['x']) {
+                singleJump();
+            }
+
+            if (y < -20 && !isJumping && !keys['z']) {
+                doubleJump();
+            }
+
+            const currentLeft = parseInt(window.getComputedStyle(hero).left, 10);
+            const newLeft = currentLeft + x;
+
+            if (newLeft >= window.innerWidth / 3 && newLeft <= window.innerWidth - window.innerWidth / 3 - hero.offsetWidth) {
+                hero.style.left = newLeft + "px";
+            }
+        };
+
+        sensor.onerror = errorHandler;
+
+        function errorHandler(event) {
+            console.log(event.error.name, event.error.message);
+        }
+    } else {
+        moveHero();
+    }
+    const tooltip = document.getElementById('tooltip');
+    const showTooltipBtn = document.querySelector('.show-tooltip-btn');
+
+    showTooltipBtn.addEventListener('click', () => {
+        tooltip.style.display = 'block';
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 3000);
+    });
+
+    const gameLoop = () => {
+        moveObstacles();
+        checkWinCondition();
+        checkCollision();
+        requestAnimationFrame(gameLoop);
+    };
+
+    gameLoop();
+</script>
+
+</body>
+</html>

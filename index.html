@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="icon" type="image/x-icon" href="icons/logo.png">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+
+    <style></style>
 </head>
 <body>
     <section id="main-screen">
@@ -19,17 +22,53 @@
                 <h3>Student`s way</h3>
                 <div class="main-screen-buttons">
                     <div class="play-btn-container">
-                        <a class="play-btn"><img src="icons/play-button%20(2).png" alt="play"></a>
+                        <a id="play-button" class="play-btn"><img src="icons/play-button%20(2).png" alt="play"></a>
                     </div>
                     <div class="btn-container">
                         <a class="info-btn btn"><img src="icons/information.png" alt="i"><span>Info</span></a>
                         <a class="story-btn btn"><img src="icons/ancient-scroll.png" alt="paper"><span>Plot</span></a>
-                        <a class="settings-btn btn"><img srcset="icons/gear-network.png" alt="gear"><span>Settings</span></a>
+                    </div>
+                    <div class="popup" id="info-popup">
+                        <div class="popup-content">
+                            <span class="close-btn" data-close="info-popup">&times;</span>
+                            <h2>Info</h2>
+                            <p>The game was developed by Anna Kozachuk and Lilia Zhuravel</p>
+                            <p>Comics were drawn by Sofiia Veremeienko</p>
+                        </div>
+                    </div>
+
+                    <div class="popup" id="story-popup">
+                        <div class="popup-content">
+                            <span class="close-btn" data-close="story-popup">&times;</span>
+                            <h2>Plot</h2>
+                            <p><strong>Groundhog Day: Student's Way</strong>
+                            were all students once. Or maybe we still are. Anyone who has experienced student life at least once knows that it is full of not only bright moments, but also real challenges. And among all these challenges, the exam session occupies a special place. It's a time when days blend into nights, caffeine becomes your best friend, and motivation is the main currency for survival. Weeks before exams are an endless marathon of assignments, lectures, notes, and trying to cram everything you've been putting off during the semester into your head.
+                             In the game "Groundhog Day: Student's Way" you will find yourself in a strange and mysterious world where reality is intertwined with mystery. Outside the window, the weather is eternally grey, a cold wind walks between the university buildings, and the gloomy student cemetery silently reminds of those who "did not survive the session". The dark silhouettes of students, lost cribs and an uneasy atmosphere are felt at every turn. Just like in Groundhog Day, each day can repeat itself over and over again until you find the perfect path to the final exam.
+                             Are you ready to pick up your test book and follow this path to the end? Then start the game!</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-<script src="script.js"></script>
+
+
+
+    <div id="task-container">
+
+    </div>
+
+    <script  src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => console.log('Service Worker registered:', registration))
+                    .catch(error => console.error('Error during Service Worker registration:', error));
+            });
+        }
+
+
+    </script>
 </body>
 </html>
